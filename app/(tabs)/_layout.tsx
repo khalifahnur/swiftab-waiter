@@ -19,7 +19,7 @@ function CustomTabButton({ children, onPress }: any) {
           width: 56,
           height: 56,
           borderRadius: 28,
-          backgroundColor: colors.floatbtnbg,
+          backgroundColor: colors.royalBlue,
           justifyContent: "center",
           alignItems: "center",
           ...Platform.select({
@@ -45,7 +45,7 @@ export default function Layout() {
   return (
     <Tabs
       screenOptions={{
-        headerShown:false,
+        headerShown: false,
         tabBarStyle: {
           backgroundColor: colors.tabbarbg,
           borderTopWidth: 0,
@@ -70,7 +70,7 @@ export default function Layout() {
             },
           }),
         },
-        tabBarActiveTintColor: colors.activeicon,
+        tabBarActiveTintColor: colors.navyBlue,
         tabBarInactiveTintColor: colors.inactiveicon,
       }}
     >
@@ -78,11 +78,26 @@ export default function Layout() {
         name="index"
         options={{
           title: "Home",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home-outline" size={20} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <View style={{ alignItems: "center", justifyContent: "center" }}>
+              <Ionicons name="home-outline" size={20} color={color} />
+              {focused && (
+                <View
+                  style={{
+                    position: "absolute",
+                    top: -7, 
+                    width: 6,
+                    height: 6,
+                    backgroundColor: colors.royalBlue,
+                    borderRadius: 4,
+                  }}
+                />
+              )}
+            </View>
           ),
         }}
       />
+
       <Tabs.Screen
         name="scan"
         options={{
@@ -95,7 +110,12 @@ export default function Layout() {
                 alignItems: "center",
               }}
             >
-              <MaterialIcons name="qr-code-scanner" size={30} color="#000" style={{paddingTop:2}} />
+              <MaterialIcons
+                name="qr-code-scanner"
+                size={30}
+                color="#FFF"
+                style={{ paddingTop: 2 }}
+              />
             </View>
           ),
           tabBarButton: (props) => <CustomTabButton {...props} />,
@@ -106,8 +126,22 @@ export default function Layout() {
         name="profile"
         options={{
           title: "Profile",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-outline" size={20} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <View style={{ alignItems: "center", justifyContent: "center" }}>
+              <Ionicons name="person-outline" size={20} color={color} />
+              {focused && (
+                <View
+                  style={{
+                    position: "absolute",
+                    top: -7,
+                    width: 6,
+                    height: 6,
+                    backgroundColor: colors.royalBlue,
+                    borderRadius: 4,
+                  }}
+                />
+              )}
+            </View>
           ),
         }}
       />
