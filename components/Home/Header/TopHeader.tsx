@@ -38,7 +38,9 @@ export default function TopHeader() {
         <Text style={styles.welcome}>Welcome to swiftab-waiter</Text>
       </View>
       <Pressable>
-        <Animated.View style={{ transform: [{ rotateY: flip }] }}>
+        <Animated.View 
+        //style={{ transform: [{ rotateY: flip }] }}
+        >
           <Image 
             source={require('@/assets/images/icons/user.jpg')} 
             style={styles.userImage}
@@ -63,12 +65,12 @@ const styles = StyleSheet.create({
   greeting: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: colors.textprimary,
+    color: '#fff',
     marginBottom: 4,
   },
   welcome: {
     fontSize: 12,
-    color: colors.textsecondary,
+    color: "#fff",
   },
   userImage: {
     width: 40,

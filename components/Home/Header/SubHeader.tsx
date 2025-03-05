@@ -1,7 +1,46 @@
+// import { Image, Pressable, StyleSheet, Text, View, TextInput } from 'react-native';
+// import React from 'react';
+
+// export default function SubHeader() {
+//   return (
+//     <View style={styles.container}>
+//       <View style={styles.searchContainer}>
+//         <Image 
+//           source={require('@/assets/images/icons/search.png')} 
+//           style={styles.searchIcon}
+//         />     
+//         <TextInput
+//           placeholder="Search for order"
+//           placeholderTextColor="#9CA3AF"
+//           style={styles.input}
+//         />
+//       </View>
+//       <Pressable 
+//         style={({ pressed }) => [
+//           styles.filterButton,
+//           { opacity: pressed ? 0.8 : 1 }
+//         ]}
+//       >
+//         <Image
+//           source={require('@/assets/images/icons/filter.png')}
+//           style={styles.filterIcon}
+//         />
+//       </Pressable>
+//     </View>
+//   );
+// }
+
+// SubHeader.tsx
 import { Image, Pressable, StyleSheet, Text, View, TextInput } from 'react-native';
 import React from 'react';
 
-export default function SubHeader() {
+interface SubHeaderProps {
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
+  onFilterPress: () => void;
+}
+
+export function SubHeader({ searchQuery, onSearchChange, onFilterPress }: SubHeaderProps) {
   return (
     <View style={styles.container}>
       <View style={styles.searchContainer}>
@@ -13,6 +52,8 @@ export default function SubHeader() {
           placeholder="Search for order"
           placeholderTextColor="#9CA3AF"
           style={styles.input}
+          value={searchQuery}
+          onChangeText={onSearchChange}
         />
       </View>
       <Pressable 
@@ -20,6 +61,7 @@ export default function SubHeader() {
           styles.filterButton,
           { opacity: pressed ? 0.8 : 1 }
         ]}
+        onPress={onFilterPress}
       >
         <Image
           source={require('@/assets/images/icons/filter.png')}

@@ -20,7 +20,7 @@ import {
       <View style={[styles.header, { gap: (MAX_WIDTH * 1) / 2 - 100 }]}>
         <Pressable
           onPress={() => route.back()}
-          style={{ backgroundColor: "#fff", padding: 5, borderRadius: 30 ,borderWidth:1,borderColor:"#e8e8e8"}}
+          style={{ backgroundColor: "#EEE", padding: 5, borderRadius: 30 ,borderWidth:1,borderColor:"#e8e8e8"}}
         >
           <AntDesign name="arrowleft" size={20} color="black" />
         </Pressable>
@@ -43,6 +43,7 @@ import {
       marginTop: 5,
       paddingHorizontal: 20,
       alignItems: "center",
+      backgroundColor:"#fff"
     },
   });
   

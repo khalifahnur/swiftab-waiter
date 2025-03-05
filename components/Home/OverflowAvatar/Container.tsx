@@ -2,7 +2,7 @@ import React from "react";
 import { View, StyleSheet } from "react-native";
 import { renderFacePile } from "./FacePile";
 import Circle from "./Circle";
-import { FacePilePropTypes } from "../types";
+import { FacePilePropTypes } from "../../../types";
 import OverflowCircle from "./OverflowCircle";
 
 export default function Container({

@@ -2,43 +2,11 @@ import React from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Share } from 'react-native';
 import { Canvas, Path, Group } from "@shopify/react-native-skia";
 import AntDesign from '@expo/vector-icons/AntDesign';
+import { ActionButtonProps, ReceiptProps } from '@/types';
+import calculateTotal from '@/lib/calculateTotal';
+import handleShare from '@/lib/handleSharing';
+import { router } from 'expo-router';
 
-// Types and Interfaces
-interface MenuItem {
-  name: string;
-  description: string;
-  amount: number;
-  image: string;
-  quantity: number;
-}
-
-interface OrderData {
-  restaurantId: string;
-  userId: string;
-  reservationId: string;
-  paid: 'paid' | 'unpaid';
-  served: boolean;
-  menu: MenuItem[];
-  floor: number;
-  tableNumber: number;
-}
-
-interface ReceiptProps {
-  orderData: OrderData;
-  onShare?: () => Promise<void>;
-  onPrint?: () => void;
-  onDownload?: () => void;
-  onEmail?: () => void;
-  onFavorite?: () => void;
-}
-
-interface ActionButtonProps {
-  icon: React.ReactNode;
-  label: string;
-  onPress: () => void;
-}
-
-// Action Button Component
 const ActionButton: React.FC<ActionButtonProps> = ({ icon, label, onPress }) => (
   <TouchableOpacity style={styles.actionButton} onPress={onPress}>
     {icon}
@@ -54,12 +22,9 @@ const Receipt: React.FC<ReceiptProps> = ({
   onEmail,
   onFavorite 
 }) => {
-  // Calculate total amount
-  const calculateTotal = (menu: MenuItem[]): number => {
-    return menu.reduce((acc, item) => acc + (item.amount * item.quantity), 0);
-  };
 
-  // Function to generate zigzag path
+  console.log("ordered data",orderData)
+  
   const createZigzagPath = (width: number): string => {
     const zigzagHeight = 8;
     const zigzagWidth = 16;
@@ -72,32 +37,17 @@ const Receipt: React.FC<ReceiptProps> = ({
     return path;
   };
 
-  // Handle sharing
-  const handleShare = async (): Promise<void> => {
-    if (customShareHandler) {
-      await customShareHandler();
-      return;
-    }
-
-    try {
-      const total = calculateTotal(orderData.menu);
-      const message = `Receipt Details:\n\n` +
-        `Table: ${orderData.tableNumber}\n` +
-        `Floor: ${orderData.floor}\n` +
-        `Order Items:\n${orderData.menu.map(item => 
-          `${item.name} x${item.quantity} - $${item.amount * item.quantity}`
-        ).join('\n')}\n\n` +
-        `Total: $${total}\n` +
-        `Reservation ID: ${orderData.reservationId}`;
-
-      await Share.share({
-        message,
-        title: 'Receipt Details',
+  const handlePrint = () => {
+    if (onPrint) {
+      onPrint();
+    } else {
+      router.replace({
+        pathname: '/screens/PrintScreen',
+        params: { orderData: JSON.stringify(orderData.menu) }
       });
-    } catch (error) {
-      console.error('Error sharing receipt:', error);
     }
   };
+  
 
   return (
     <View style={styles.container}>
@@ -105,6 +55,7 @@ const Receipt: React.FC<ReceiptProps> = ({
         <View style={styles.header}>
           <Text style={styles.headerText}>Receipt</Text>
           <Text style={styles.headerSubText}>Order Details</Text>
+          <Text style={styles.headerSubText}>{orderData.orderId}</Text>
         </View>
 
         <Canvas style={{ height: 10, width: '100%' }}>
@@ -130,11 +81,11 @@ const Receipt: React.FC<ReceiptProps> = ({
             <View key={index} style={styles.menuItem}>
               <View style={styles.menuItemHeader}>
                 <Text style={styles.itemName}>{item.name}</Text>
-                <Text style={styles.itemQuantity}>x{item.quantity}</Text>
+                <Text style={styles.itemQuantity}> x {item.quantity}</Text>
               </View>
               <Text style={styles.itemDescription}>{item.description}</Text>
               <Text style={styles.itemPrice}>
-                Ksh.{(item.amount * item.quantity).toLocaleString()}
+                Ksh.{(item.cost).toLocaleString()}
               </Text>
             </View>
           ))}
@@ -143,7 +94,7 @@ const Receipt: React.FC<ReceiptProps> = ({
         <View style={styles.totalSection}>
           <Text style={styles.totalText}>Total</Text>
           <Text style={styles.totalAmount}>
-            ${calculateTotal(orderData.menu).toLocaleString()}
+            Ksh.{calculateTotal(orderData.menu).toLocaleString()}
           </Text>
         </View>
 
@@ -167,12 +118,12 @@ const Receipt: React.FC<ReceiptProps> = ({
           <ActionButton
             icon={<AntDesign name='sharealt' size={24} color="#333" />}
             label="Share"
-            onPress={handleShare}
+            onPress={()=>handleShare(orderData)}
           />
           <ActionButton
             icon={<AntDesign name='printer' size={24} color="#333" />}
             label="Print"
-            onPress={onPrint ?? (() => console.log('Print functionality to be implemented'))}
+            onPress={handlePrint}
           />
           <ActionButton
             icon={<AntDesign name='download' size={24} color="#333" />}
@@ -198,7 +149,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'white',
-    padding: 16,
     alignSelf: 'center',
   },
   scrollView: {
@@ -220,6 +170,8 @@ const styles = StyleSheet.create({
   },
   detailsContainer: {
     padding: 16,
+    flexDirection:"row",
+    justifyContent:'space-between'
   },
   detailText: {
     fontSize: 14,
@@ -250,7 +202,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   itemQuantity: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#666',
   },
   itemDescription: {
@@ -259,7 +211,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   itemPrice: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '500',
     textAlign: 'right',
   },

@@ -2,9 +2,13 @@ import { Image, StyleSheet, Text, TouchableOpacity, View, Animated } from 'react
 import React, { useState } from 'react'
 import Container from '../OverflowAvatar/Container';
 import { useRouter } from 'expo-router';
+import { colors } from '@/constants/Colors';
+import { FetchOrder } from '@/types';
 
-export default function Card({floor = 2, table = 5, paid = '', menu = []}) {
-    const [isServed, setIsServed] = useState(false);
+export default function Card({tableNumber , paid , menu, status,reservationId,orderId}:FetchOrder) {
+    console.log(reservationId,orderId)
+    const isserved = status?.trim().toLowerCase() === "served";
+    const [isServed, setIsServed] = useState(isserved);
     const [scaleValue] = useState(new Animated.Value(1));
     const router = useRouter();
     
@@ -43,9 +47,14 @@ export default function Card({floor = 2, table = 5, paid = '', menu = []}) {
         setIsServed(!isServed);
     };
 
-    const ReceiptHandler = ()=>{
-        router.navigate("/screens/DetailsScreen");
-    }
+    const ReceiptHandler = () => {
+        router.navigate({ 
+            pathname: "/screens/DetailsScreen", 
+            params: { 
+                data: JSON.stringify({ menu, tableNumber, paid, status, reservationId,orderId }) 
+            }
+        });
+    };
 
     return (
         <View style={styles.cardWrapper}>
@@ -62,15 +71,15 @@ export default function Card({floor = 2, table = 5, paid = '', menu = []}) {
                 
                 <View style={styles.detailsContainer}>
                     <View style={styles.detail}>
-                        <Text style={styles.floorText}>Floor {floor}</Text>
-                        <Text style={styles.tableText}>Table {table}</Text>
-                        <Text style={styles.paidText}>{paid}</Text>
+                        <Text style={[styles.floorText,isServed && styles.served]}>Floor: Main Room</Text>
+                        <Text style={[styles.tableText,isServed && styles.served]}>Table {tableNumber}</Text>
+                        <Text style={[styles.paidText,isServed && styles.served]}>{paid}</Text>
                     </View>
                     <View style={styles.textContent}>
-                        <Text style={styles.menuTitle} numberOfLines={1} ellipsizeMode='tail'>
+                        <Text style={[styles.menuTitle,isServed && styles.served]} numberOfLines={1} ellipsizeMode='tail'>
                             {menuTitle}
                         </Text>
-                        <Text style={styles.menuDescription} numberOfLines={2} ellipsizeMode='tail'>
+                        <Text style={[styles.menuDescription,isServed && styles.served]} numberOfLines={2} ellipsizeMode='tail'>
                             {menuDesc}
                         </Text>
                     </View>
@@ -102,7 +111,8 @@ const styles = StyleSheet.create({
         marginBottom: 5,
     },
     card: {
-        backgroundColor: '#f76a65',
+        //backgroundColor: '#f76a65',
+        backgroundColor:colors.secondary,
         shadowColor: "#000",
         shadowOffset: { width: 1, height: 2 },
         shadowOpacity: 0.9,
@@ -189,5 +199,8 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 14,
         fontWeight: 'bold',
+    },
+    served:{
+        color:'#fff'
     }
 });

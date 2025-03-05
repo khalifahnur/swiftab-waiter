@@ -1,5 +1,5 @@
 import { Animated, Image, StyleSheet } from "react-native";
-import { CirclePropTypes } from "../types";
+import { CirclePropTypes } from "../../../types";
 
 const Circle = ({ imageStyle, circleSize, face, offset }: CirclePropTypes) => {
     const innerCircleSize = circleSize * 2;
