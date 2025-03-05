@@ -1,4 +1,5 @@
 // note(bacon): Purposefully skip using the themed icons since we want the icons to change color based on toggle state.
+import { colors } from '@/constants/Colors';
 import Ionicons from '@expo/vector-icons/build/Ionicons';
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
@@ -8,8 +9,8 @@ import { StyleSheet } from 'react-native';
 import TouchableBounce from 'react-native/Libraries/Components/Touchable/TouchableBounce';
 
 
-const size = 64;
-const slop = 40;
+const size = 55;
+const slop = 30;
 
 const hitSlop = { top: slop, bottom: slop, right: slop, left: slop };
 
@@ -17,7 +18,7 @@ export default function QRFooterButton({
   onPress,
   isActive = false,
   iconName,
-  iconSize = 36,
+  iconSize = 28,
 }: {
   onPress: () => void;
   isActive?: boolean;
@@ -39,7 +40,7 @@ export default function QRFooterButton({
   return (
     <TouchableBounce hitSlop={hitSlop} onPressIn={onPressIn} onPress={onPressButton}>
       <BlurView intensity={100} style={styles.container} tint={tint}>
-        <Ionicons name={iconName} size={iconSize} color={"blue"} />
+        <Ionicons name={iconName} size={iconSize} color={colors.royalBlue} />
       </BlurView>
     </TouchableBounce>
   );

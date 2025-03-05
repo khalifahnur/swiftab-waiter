@@ -1,21 +1,38 @@
-import { BlurView } from 'expo-blur';
-import { throttle } from 'lodash';
-import React, { useEffect, useRef, useState } from 'react';
-import { Linking, Platform, StatusBar, StyleSheet, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Camera, useCameraDevice, useCodeScanner } from 'react-native-vision-camera';
+import { BlurView } from "expo-blur";
+import { throttle } from "lodash";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  Alert,
+  Platform,
+  StatusBar,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  Camera,
+  useCameraDevice,
+  useCodeScanner,
+} from "react-native-vision-camera";
+import { RESULTS } from "react-native-permissions";
+import { useRouter } from "expo-router";
 
-import QRFooterButton from './QRFooterButton';
-import QRIndicator from './QRIndicator';
-import { useRouter } from 'expo-router';
-
+import QRFooterButton from "./QRFooterButton";
+import QRIndicator from "./QRIndicator";
+import { usePermissions } from "@/hooks/usePermissions";
+import { EPermissionTypes } from "@/constants";
+import { goToSettings } from "@/lib/helpers";
+import { CreateOrder } from "@/types";
+import { useCreateOrder } from "@/hooks/apihook/orderHook";
+import Toast from "react-native-toast-message";
 
 type State = {
   isVisible: boolean;
   url: null | string;
 };
 
-const initialState: State = { isVisible: Platform.OS === 'ios', url: null };
+const initialState: State = { isVisible: Platform.OS === "ios", url: null };
 
 export default function BarCodeScreen() {
   const [state, setState] = React.useReducer(
@@ -23,19 +40,14 @@ export default function BarCodeScreen() {
     initialState
   );
   const [isLit, setLit] = React.useState(false);
-  const device = useCameraDevice('back');
+  const [hasPermission, setHasPermission] = useState(false);
+  const device = useCameraDevice("back");
   const camera = useRef<Camera>(null);
+  const router = useRouter();
+  const { askPermissions } = usePermissions(EPermissionTypes.CAMERA);
+  const { top, bottom } = useSafeAreaInsets();
 
-  const codeScanner = useCodeScanner({
-    codeTypes: ['qr'],
-    onCodeScanned: throttle((codes) => {
-      if (codes.length > 0 && codes[0].value) {
-        setState({ isVisible: false, url: codes[0].value });
-      }
-    }, 1000),
-  });
-
-  React.useEffect(() => {
+  useEffect(() => {
     let timeout: ReturnType<typeof setTimeout>;
     if (!state.isVisible) {
       timeout = setTimeout(() => {
@@ -47,59 +59,159 @@ export default function BarCodeScreen() {
     };
   }, []);
 
-//   React.useEffect(() => {
-//     if (!state.isVisible && state.url) {
-//       openUrl(state.url);
-//     }
-//   }, [state.isVisible, state.url]);
+  // Handle permissions
+  useEffect(() => {
+    const checkPermission = async () => {
+      try {
+        const response = await askPermissions();
+        if (
+          response.type === RESULTS.LIMITED ||
+          response.type === RESULTS.GRANTED
+        ) {
+          setHasPermission(true);
+        } else {
+          handlePermissionDenied(response.type);
+        }
+      } catch (error: any) {
+        handlePermissionError(error);
+      }
+    };
 
-//   const openUrl = (url: string) => {
-//     props.navigation.pop();
+    checkPermission();
+  }, [askPermissions]);
 
-//     setTimeout(
-//       () => {
-//         StatusBar.setBarStyle('default');
-//         Linking.openURL(url);
-//       },
-//       Platform.select({
-//         ios: 16,
-//         default: 500,
-//       })
-//     );
-//   };
+  const handlePermissionDenied = (type: string) => {
+    if (type === RESULTS.UNAVAILABLE) {
+      Alert.alert("This feature is not supported on this device");
+    } else if (type === RESULTS.BLOCKED || type === RESULTS.DENIED) {
+      Alert.alert(
+        "Permission Denied",
+        "Please give permission from settings to continue using camera.",
+        [
+          { text: "Cancel", style: "cancel" },
+          { text: "Go To Settings", onPress: goToSettings },
+        ]
+      );
+    }
+  };
 
-const router = useRouter()
+  const handlePermissionError = (error: any) => {
+    if (error.isError) {
+      Alert.alert(
+        error.errorMessage ||
+          "Something went wrong while taking camera permission"
+      );
+    } else {
+      handlePermissionDenied(error.type);
+    }
+  };
+
   const onCancel = React.useCallback(() => {
-    router.back()
-  }, []);
+    router.back();
+  }, [router]);
 
   const onFlashToggle = React.useCallback(() => {
-    setLit((isLit) => !isLit);
+    setLit((prev) => !prev);
   }, []);
 
-  const { top, bottom } = useSafeAreaInsets();
+  // const handleBarCodeScanned = async ({ data }) => {
+  //   try {
+  //     // Parse QR data (assuming it's a JSON string)
+  //     const orderData = JSON.parse(data);
+
+  //     // Send order to backend
+  //     await saveOrderToBackend(orderData);
+
+  //     // Navigate to Home Tab
+  //     navigation.navigate('Home');
+
+  //     // Show confirmation screen (optional)
+  //     navigation.navigate('OrderSuccess');
+  //   } catch (error) {
+  //     alert('Failed to process order: ' + error.message);
+  //   }
+  // };
+
+  const {
+    mutate: createOrder,
+    isPending,
+    isError,
+    error,
+  } = useCreateOrder({
+    onSuccess: (data) => {
+      Toast.show({
+        type: "success",
+        text1: "Order created successfully!",
+      });
+      router.navigate("/(tabs)");
+    },
+    onError: (error) => {
+      console.error("Order creation failed:", error.message);
+      Toast.show({
+        type: "error",
+        text1: "Order creation failed!",
+      });
+      Alert.alert("Error", error.message);
+    },
+  });
+
+  const codeScanner = useCodeScanner({
+    codeTypes: ["qr"],
+    onCodeScanned: throttle((codes) => {
+      if (codes.length > 0 && codes[0].value) {
+        try {
+          const scannedData = JSON.parse(codes[0].value);
+
+          if (!Array.isArray(scannedData) || scannedData.length === 0) {
+            throw new Error("Invalid QR Code format");
+          }
+
+          const orderData: CreateOrder = {
+            menu: scannedData[0].menu,
+            userId: scannedData[0].userId, // Replace with actual user ID
+            restaurantId: scannedData[0].restaurantId,
+            reservationId: scannedData[0].reservationData?.reservationId || "",
+            //diningArea: scannedData[0].reservationData?.diningArea || "",
+            tableNumber: scannedData[0].reservationData?.tableNumber || 0,
+          };
+
+          createOrder(orderData);
+        } catch (error) {
+          console.error("Invalid QR code format:", error);
+          Alert.alert(
+            "Invalid QR Code",
+            "The scanned QR code is not in the correct format."
+          );
+        }
+      }
+    }, 1000),
+  });
 
   return (
     <View style={styles.container}>
-      {state.isVisible && device ? (
+      {state.isVisible && device && hasPermission ? (
         <Camera
           ref={camera}
           style={StyleSheet.absoluteFill}
           device={device}
           isActive={true}
           codeScanner={codeScanner}
-          torch={isLit ? 'on' : 'off'}
+          torch={isLit ? "on" : "off"}
         />
       ) : null}
 
       <View style={[styles.header, { top: 40 + top }]}>
-        <Hint>Scan an Expo QR code</Hint>
+        <Hint>Scan QR code</Hint>
       </View>
 
       <QRIndicator />
 
-      <View style={[styles.footer, { bottom: 30 + bottom }]}>
-        <QRFooterButton onPress={onFlashToggle} isActive={isLit} iconName="flashlight" />
+      <View style={[styles.footer, { bottom: 60 + bottom }]}>
+        <QRFooterButton
+          onPress={onFlashToggle}
+          isActive={isLit}
+          iconName="flashlight"
+        />
         <QRFooterButton onPress={onCancel} iconName="close" iconSize={48} />
       </View>
 
@@ -119,38 +231,38 @@ function Hint({ children }: { children: string }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#fff",
+    justifyContent: "center",
+    alignItems: "center",
   },
   hint: {
     paddingHorizontal: 16,
     paddingVertical: 20,
     borderRadius: 16,
-    overflow: 'hidden',
-    justifyContent: 'center',
-    alignItems: 'center',
+    overflow: "hidden",
+    justifyContent: "center",
+    alignItems: "center",
   },
   header: {
-    position: 'absolute',
+    position: "absolute",
     left: 0,
     right: 0,
-    alignItems: 'center',
+    alignItems: "center",
   },
   headerText: {
-    color: '#fff',
-    backgroundColor: 'transparent',
-    textAlign: 'center',
+    color: "#fff",
+    backgroundColor: "transparent",
+    textAlign: "center",
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   footer: {
-    position: 'absolute',
+    position: "absolute",
     left: 0,
     right: 0,
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: '10%',
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: "10%",
   },
 });
