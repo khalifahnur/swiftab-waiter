@@ -34,9 +34,15 @@ export const colors = {
   activeicon:"#FF6B6B",
   inactiveicon:"#8C9BAB",
   tabbarbg:"#FFF",
+  //tabbarbg:"#EEE",
   floatbtnbg:"#FF6B6B",
   textprimary:"#2D3748",
   textsecondary:"#718096",
   cardBg:"#FFF",
-  dividers:"#E2E8F0"
+  dividers:"#E2E8F0",
+
+  blueLight:"#BFD7ED",
+  blueGronto:"#60A3D9",
+  royalBlue:"#0074B7",
+  navyBlue:"#003B73"
 }
