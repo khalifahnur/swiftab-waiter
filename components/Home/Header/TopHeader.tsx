@@ -1,6 +1,7 @@
 import { Image, Pressable, StyleSheet, Text, View, Animated } from 'react-native';
 import React, { useEffect, useRef } from 'react';
 import { colors } from '@/constants/Colors';
+import { router } from 'expo-router';
 
 export default function TopHeader() {
   // Create animated value for horizontal flip
@@ -37,7 +38,7 @@ export default function TopHeader() {
         <Text style={styles.greeting}>Hello, Waiter</Text>
         <Text style={styles.welcome}>Welcome to swiftab-waiter</Text>
       </View>
-      <Pressable>
+      <Pressable onPress={()=>router.navigate('/(tabs)/profile')}>
         <Animated.View 
         //style={{ transform: [{ rotateY: flip }] }}
         >

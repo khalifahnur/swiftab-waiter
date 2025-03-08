@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { List } from 'react-native-paper';
 
 const FAQsScreen = () => {
@@ -10,7 +10,7 @@ const FAQsScreen = () => {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
       <List.Section>
         <List.Subheader>Frequently Asked Questions</List.Subheader>
 
@@ -47,7 +47,7 @@ const FAQsScreen = () => {
         </List.Accordion>
 
       </List.Section>
-    </ScrollView>
+    </View>
   );
 };
 
