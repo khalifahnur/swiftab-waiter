@@ -1,186 +1,297 @@
-import React, { useState } from 'react';
+import { useNavigation } from '@react-navigation/native';
+import { router } from 'expo-router';
+import React, { useLayoutEffect, useState } from 'react';
 import {
+  ScrollView,
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
-  Image,
-  FlatList,
   StatusBar,
-  SafeAreaView,
+  Image,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-const WaiterHomeScreen = () => {
-  const [activeTab, setActiveTab] = useState('tables');
-  
-  // Sample data
-  const tables = [
-    { id: '1', number: '12', status: 'occupied', guests: 4, orderTime: '19:22' },
-    { id: '2', number: '8', status: 'waiting', guests: 2, orderTime: '19:28' },
-    { id: '3', number: '5', status: 'ready', guests: 3, orderTime: '19:15' },
-    { id: '4', number: '3', status: 'empty', guests: 0, orderTime: null },
-    { id: '5', number: '7', status: 'occupied', guests: 6, orderTime: '19:05' },
-    { id: '6', number: '15', status: 'paying', guests: 2, orderTime: '18:45' },
-  ];
+const PrivacyPolicyScreen = ({ navigation }) => {
+  const [expandedSections, setExpandedSections] = useState({
+    dataCollection: true,
+    dataUsage: false,
+    dataSecurity: false,
+    userRights: false,
+    updates: false,
+  });
 
-  const renderTableItem = ({ item }) => {
-    // Define status colors
-    const statusColors = {
-      occupied: '#3498db', // Blue
-      waiting: '#f39c12', // Orange
-      ready: '#2ecc71',   // Green
-      empty: '#95a5a6',   // Gray
-      paying: '#9b59b6',  // Purple
-    };
+  const navigate = useNavigation();
     
-    // Define status labels
-    const statusLabels = {
-      occupied: 'Dining',
-      waiting: 'Waiting for food',
-      ready: 'Food ready',
-      empty: 'Available',
-      paying: 'Paying',
-    };
 
-    return (
-      <TouchableOpacity 
-        style={[styles.tableCard, { borderLeftColor: statusColors[item.status] }]}
-        onPress={() => console.log(`Table ${item.number} pressed`)}
-      >
-        <View style={styles.tableNumberContainer}>
-          <Text style={styles.tableNumber}>{item.number}</Text>
-        </View>
-        <View style={styles.tableInfo}>
-          <Text style={styles.tableInfoTitle}>
-            {item.status === 'empty' ? 'Available' : `${item.guests} guests`}
-          </Text>
-          <View style={[styles.statusBadge, { backgroundColor: statusColors[item.status] }]}>
-            <Text style={styles.statusText}>{statusLabels[item.status]}</Text>
-          </View>
-          {item.orderTime && (
-            <Text style={styles.timeText}>Order: {item.orderTime}</Text>
-          )}
-        </View>
-        <Ionicons name="chevron-forward" size={24} color="#ccc" />
-      </TouchableOpacity>
-    );
+  const toggleSection = (section) => {
+    setExpandedSections({
+      ...expandedSections,
+      [section]: !expandedSections[section],
+    });
   };
+
+  const PolicySection = ({ title, content, id }) => (
+    <View style={styles.sectionContainer}>
+      <TouchableOpacity 
+        style={styles.sectionHeader} 
+        onPress={() => toggleSection(id)}
+      >
+        <Text style={styles.sectionTitle}>{title}</Text>
+        <Text style={styles.expandIcon}>
+          {expandedSections[id] ? '−' : '+'}
+        </Text>
+      </TouchableOpacity>
+      
+      {expandedSections[id] && (
+        <View style={styles.sectionContent}>
+          {content}
+        </View>
+      )}
+    </View>
+  );
+
+  useLayoutEffect(() => {
+    navigate.setOptions({
+      headerShown:false
+    });
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
       
-      {/* Header */}
       <View style={styles.header}>
-        <View style={styles.profileSection}>
-          <Image 
-            source={{ uri: 'https://via.placeholder.com/50' }} 
-            style={styles.profileImage} 
+        <Image 
+          source={require('@/assets/images/icon.png')} 
+          style={styles.logo}
+          resizeMode="contain"
+        />
+        <Text style={styles.headerTitle}>Privacy Policy</Text>
+      </View>
+      
+      <ScrollView style={styles.scrollView}>
+        <View style={styles.contentContainer}>
+          <Text style={styles.intro}>
+            At SwiftTab, we value your privacy and are committed to protecting your personal information.
+            This Privacy Policy explains how we collect, use, and safeguard your data when you use our
+            restaurant management application.
+          </Text>
+          
+          <Text style={styles.lastUpdated}>Last Updated: March 8, 2025</Text>
+          
+          <PolicySection
+            id="dataCollection"
+            title="1. Information We Collect"
+            content={
+              <View>
+                <Text style={styles.sectionText}>
+                  We collect the following types of information when you use SwiftTab:
+                </Text>
+                <View style={styles.bulletPoint}>
+                  <Text style={styles.bullet}>•</Text>
+                  <Text style={styles.bulletText}>
+                    <Text style={styles.bold}>Account Information:</Text> Your name, email address, and restaurant details.
+                  </Text>
+                </View>
+                <View style={styles.bulletPoint}>
+                  <Text style={styles.bullet}>•</Text>
+                  <Text style={styles.bulletText}>
+                    <Text style={styles.bold}>Usage Data:</Text> Information about how you use the app, including order processing times, table turnover rates, and service metrics.
+                  </Text>
+                </View>
+                <View style={styles.bulletPoint}>
+                  <Text style={styles.bullet}>•</Text>
+                  <Text style={styles.bulletText}>
+                    <Text style={styles.bold}>Device Information:</Text> Device type, operating system, and unique device identifiers.
+                  </Text>
+                </View>
+                <View style={styles.bulletPoint}>
+                  <Text style={styles.bullet}>•</Text>
+                  <Text style={styles.bulletText}>
+                    <Text style={styles.bold}>Order Data:</Text> Customer orders, preferences, and payment information (we do not store complete payment details).
+                  </Text>
+                </View>
+              </View>
+            }
           />
-          <View>
-            <Text style={styles.welcomeText}>Welcome back,</Text>
-            <Text style={styles.nameText}>Alex</Text>
+          
+          <PolicySection
+            id="dataUsage"
+            title="2. How We Use Your Information"
+            content={
+              <View>
+                <Text style={styles.sectionText}>
+                  We use the collected information for the following purposes:
+                </Text>
+                <View style={styles.bulletPoint}>
+                  <Text style={styles.bullet}>•</Text>
+                  <Text style={styles.bulletText}>
+                    To provide and maintain our service
+                  </Text>
+                </View>
+                <View style={styles.bulletPoint}>
+                  <Text style={styles.bullet}>•</Text>
+                  <Text style={styles.bulletText}>
+                    To improve the functionality and user experience of SwiftTab
+                  </Text>
+                </View>
+                <View style={styles.bulletPoint}>
+                  <Text style={styles.bullet}>•</Text>
+                  <Text style={styles.bulletText}>
+                    To generate analytical insights that help optimize restaurant operations
+                  </Text>
+                </View>
+                <View style={styles.bulletPoint}>
+                  <Text style={styles.bullet}>•</Text>
+                  <Text style={styles.bulletText}>
+                    To communicate important updates and information about our service
+                  </Text>
+                </View>
+                <View style={styles.bulletPoint}>
+                  <Text style={styles.bullet}>•</Text>
+                  <Text style={styles.bulletText}>
+                    To prevent fraud and ensure secure transactions
+                  </Text>
+                </View>
+              </View>
+            }
+          />
+          
+          <PolicySection
+            id="dataSecurity"
+            title="3. Data Security"
+            content={
+              <View>
+                <Text style={styles.sectionText}>
+                  We implement robust security measures to protect your information:
+                </Text>
+                <View style={styles.bulletPoint}>
+                  <Text style={styles.bullet}>•</Text>
+                  <Text style={styles.bulletText}>
+                    End-to-end encryption for all data transmission
+                  </Text>
+                </View>
+                <View style={styles.bulletPoint}>
+                  <Text style={styles.bullet}>•</Text>
+                  <Text style={styles.bulletText}>
+                    Secure cloud storage with regular security audits
+                  </Text>
+                </View>
+                <View style={styles.bulletPoint}>
+                  <Text style={styles.bullet}>•</Text>
+                  <Text style={styles.bulletText}>
+                    Access controls restricting who can view sensitive information
+                  </Text>
+                </View>
+                <View style={styles.bulletPoint}>
+                  <Text style={styles.bullet}>•</Text>
+                  <Text style={styles.bulletText}>
+                    Regular security updates and vulnerability assessments
+                  </Text>
+                </View>
+                <Text style={styles.sectionText}>
+                  While we implement these safeguards, no method of electronic transmission or storage is 100% secure. We strive to use commercially acceptable means to protect your information.
+                </Text>
+              </View>
+            }
+          />
+          
+          <PolicySection
+            id="userRights"
+            title="4. Your Rights"
+            content={
+              <View>
+                <Text style={styles.sectionText}>
+                  As a SwiftTab user, you have the right to:
+                </Text>
+                <View style={styles.bulletPoint}>
+                  <Text style={styles.bullet}>•</Text>
+                  <Text style={styles.bulletText}>
+                    Access the personal data we hold about you
+                  </Text>
+                </View>
+                <View style={styles.bulletPoint}>
+                  <Text style={styles.bullet}>•</Text>
+                  <Text style={styles.bulletText}>
+                    Request correction of inaccurate information
+                  </Text>
+                </View>
+                <View style={styles.bulletPoint}>
+                  <Text style={styles.bullet}>•</Text>
+                  <Text style={styles.bulletText}>
+                    Request deletion of your data (subject to certain limitations)
+                  </Text>
+                </View>
+                <View style={styles.bulletPoint}>
+                  <Text style={styles.bullet}>•</Text>
+                  <Text style={styles.bulletText}>
+                    Opt out of certain data collection practices
+                  </Text>
+                </View>
+                <View style={styles.bulletPoint}>
+                  <Text style={styles.bullet}>•</Text>
+                  <Text style={styles.bulletText}>
+                    Receive your data in a portable format
+                  </Text>
+                </View>
+                <Text style={styles.sectionText}>
+                  To exercise these rights, contact us at privacy@swiftab.com.
+                </Text>
+              </View>
+            }
+          />
+          
+          <PolicySection
+            id="updates"
+            title="5. Changes to This Policy"
+            content={
+              <View>
+                <Text style={styles.sectionText}>
+                  We may update our Privacy Policy from time to time. We will notify you of any changes by:
+                </Text>
+                <View style={styles.bulletPoint}>
+                  <Text style={styles.bullet}>•</Text>
+                  <Text style={styles.bulletText}>
+                    Posting the new Privacy Policy on this page
+                  </Text>
+                </View>
+                <View style={styles.bulletPoint}>
+                  <Text style={styles.bullet}>•</Text>
+                  <Text style={styles.bulletText}>
+                    Sending you an email notification
+                  </Text>
+                </View>
+                <View style={styles.bulletPoint}>
+                  <Text style={styles.bullet}>•</Text>
+                  <Text style={styles.bulletText}>
+                    Displaying a notice in the app
+                  </Text>
+                </View>
+                <Text style={styles.sectionText}>
+                  We encourage you to review this Privacy Policy periodically for any changes.
+                </Text>
+              </View>
+            }
+          />
+          
+          <View style={styles.contactContainer}>
+            <Text style={styles.contactTitle}>Questions or Concerns?</Text>
+            <Text style={styles.contactText}>
+              If you have any questions about this Privacy Policy, please contact us:
+            </Text>
+            <Text style={styles.contactEmail}>privacy@swiftab.com</Text>
+            <Text style={styles.contactPhone}>+254 7123-4567</Text>
           </View>
         </View>
-        <View style={styles.headerButtons}>
-          <TouchableOpacity style={styles.iconButton}>
-            <Ionicons name="notifications-outline" size={24} color="#333" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton}>
-            <Ionicons name="scan-outline" size={24} color="#333" />
-          </TouchableOpacity>
-        </View>
-      </View>
+      </ScrollView>
       
-      {/* Summary Cards */}
-      <View style={styles.summaryContainer}>
-        <View style={styles.summaryCard}>
-          <Ionicons name="people-outline" size={24} color="#3498db" />
-          <Text style={styles.summaryNumber}>17</Text>
-          <Text style={styles.summaryLabel}>Customers</Text>
-        </View>
-        
-        <View style={styles.summaryCard}>
-          <Ionicons name="restaurant-outline" size={24} color="#e74c3c" />
-          <Text style={styles.summaryNumber}>8</Text>
-          <Text style={styles.summaryLabel}>Orders</Text>
-        </View>
-        
-        <View style={styles.summaryCard}>
-          <Ionicons name="timer-outline" size={24} color="#f39c12" />
-          <Text style={styles.summaryNumber}>2</Text>
-          <Text style={styles.summaryLabel}>Waiting</Text>
-        </View>
-      </View>
-      
-      {/* Tab Navigation */}
-      <View style={styles.tabContainer}>
+      <View style={styles.footer}>
         <TouchableOpacity 
-          style={[styles.tab, activeTab === 'tables' && styles.activeTab]} 
-          onPress={() => setActiveTab('tables')}
+          style={styles.acceptButton}
+          onPress={() => router.back()}
         >
-          <Text style={[styles.tabText, activeTab === 'tables' && styles.activeTabText]}>Tables</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={[styles.tab, activeTab === 'orders' && styles.activeTab]} 
-          onPress={() => setActiveTab('orders')}
-        >
-          <Text style={[styles.tabText, activeTab === 'orders' && styles.activeTabText]}>Orders</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={[styles.tab, activeTab === 'menu' && styles.activeTab]} 
-          onPress={() => setActiveTab('menu')}
-        >
-          <Text style={[styles.tabText, activeTab === 'menu' && styles.activeTabText]}>Menu</Text>
-        </TouchableOpacity>
-      </View>
-      
-      {/* Main Content - Tables List */}
-      <View style={styles.content}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionHeaderText}>Tables Overview</Text>
-          <TouchableOpacity style={styles.filterButton}>
-            <Ionicons name="filter" size={20} color="#555" />
-            <Text style={styles.filterText}>Filter</Text>
-          </TouchableOpacity>
-        </View>
-        
-        <FlatList
-          data={tables}
-          renderItem={renderTableItem}
-          keyExtractor={item => item.id}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.tablesList}
-        />
-      </View>
-      
-      {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity style={styles.bottomNavItem}>
-          <Ionicons name="home" size={24} color="#3498db" />
-          <Text style={[styles.bottomNavText, { color: '#3498db' }]}>Home</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.bottomNavItem}>
-          <Ionicons name="stats-chart-outline" size={24} color="#777" />
-          <Text style={styles.bottomNavText}>Stats</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.qrScanButton}>
-          <Ionicons name="scan-outline" size={28} color="#fff" />
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.bottomNavItem}>
-          <Ionicons name="time-outline" size={24} color="#777" />
-          <Text style={styles.bottomNavText}>History</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.bottomNavItem}>
-          <Ionicons name="person-outline" size={24} color="#777" />
-          <Text style={styles.bottomNavText}>Profile</Text>
+          <Text style={styles.acceptButtonText}>Accept & Continue</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -190,214 +301,155 @@ const WaiterHomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f7fa',
+    backgroundColor: '#ffffff',
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    backgroundColor: '#fff',
-  },
-  profileSection: {
+    padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+    backgroundColor: "#3a86ff",
   },
-  profileImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+  // header: {
+  //   backgroundColor: "#3a86ff",
+  //   paddingHorizontal: 20,
+  //   justifyContent: "flex-end",
+  //   paddingBottom: 15,
+  //   zIndex: 10,
+  //   shadowColor: "#000",
+  //   shadowOffset: { width: 0, height: 2 },
+  //   shadowOpacity: 0.1,
+  //   shadowRadius: 3,
+  //   elevation: 5,
+  // },
+  logo: {
+    width: 40,
+    height: 40,
     marginRight: 12,
   },
-  welcomeText: {
-    fontSize: 14,
-    color: '#777',
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#2c3e50',
   },
-  nameText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
+  scrollView: {
+    flex: 1,
   },
-  headerButtons: {
-    flexDirection: 'row',
-  },
-  iconButton: {
-    padding: 8,
-    marginLeft: 8,
-    backgroundColor: '#f5f7fa',
-    borderRadius: 12,
-  },
-  summaryContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  contentContainer: {
     padding: 20,
   },
-  summaryCard: {
-    flex: 1,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 15,
-    marginHorizontal: 5,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3.84,
-    elevation: 2,
-  },
-  summaryNumber: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginTop: 8,
-    marginBottom: 2,
-  },
-  summaryLabel: {
-    fontSize: 12,
-    color: '#777',
-  },
-  tabContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    paddingHorizontal: 20,
-    marginTop: 10,
-  },
-  tab: {
-    paddingVertical: 15,
-    marginRight: 25,
-  },
-  activeTab: {
-    borderBottomWidth: 2,
-    borderBottomColor: '#3498db',
-  },
-  tabText: {
+  intro: {
     fontSize: 16,
-    color: '#777',
+    lineHeight: 24,
+    color: '#34495e',
+    marginBottom: 16,
   },
-  activeTabText: {
+  lastUpdated: {
+    fontSize: 14,
+    color: '#7f8c8d',
+    marginBottom: 24,
+    fontStyle: 'italic',
+  },
+  sectionContainer: {
+    marginBottom: 16,
+    borderRadius: 8,
+    backgroundColor: '#f9f9f9',
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
+  },
+  sectionHeader: {
+    padding: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#2c3e50',
+  },
+  expandIcon: {
+    fontSize: 24,
     color: '#3498db',
     fontWeight: 'bold',
   },
-  content: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 15,
+  sectionContent: {
+    padding: 16,
   },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  sectionHeaderText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  filterButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  filterText: {
-    marginLeft: 4,
-    fontSize: 14,
-    color: '#555',
-  },
-  tablesList: {
-    paddingBottom: 20,
-  },
-  tableCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 15,
+  sectionText: {
+    fontSize: 15,
+    lineHeight: 22,
+    color: '#34495e',
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 1,
-    borderLeftWidth: 5,
   },
-  tableNumberContainer: {
-    width: 40,
-    height: 40,
-    backgroundColor: '#f5f7fa',
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 15,
-  },
-  tableNumber: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  tableInfo: {
-    flex: 1,
-  },
-  tableInfoTitle: {
-    fontSize: 16,
-    fontWeight: '500',
-    marginBottom: 4,
-  },
-  statusBadge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 12,
-    marginBottom: 4,
-  },
-  statusText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  timeText: {
-    fontSize: 12,
-    color: '#777',
-  },
-  bottomNav: {
+  bulletPoint: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    paddingVertical: 10,
-    borderTopColor: '#eee',
+    marginBottom: 8,
+    paddingLeft: 8,
+  },
+  bullet: {
+    fontSize: 15,
+    color: '#3498db',
+    width: 12,
+  },
+  bulletText: {
+    fontSize: 15,
+    lineHeight: 22,
+    flex: 1,
+    color: '#34495e',
+  },
+  bold: {
+    fontWeight: '600',
+  },
+  contactContainer: {
+    marginTop: 24,
+    marginBottom: 24,
+    padding: 20,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
+  },
+  contactTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#2c3e50',
+    marginBottom: 12,
+  },
+  contactText: {
+    fontSize: 15,
+    lineHeight: 22,
+    color: '#34495e',
+    marginBottom: 12,
+  },
+  contactEmail: {
+    fontSize: 15,
+    color: '#3498db',
+    marginBottom: 8,
+  },
+  contactPhone: {
+    fontSize: 15,
+    color: '#34495e',
+  },
+  footer: {
+    padding: 16,
     borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
   },
-  bottomNavItem: {
-    alignItems: 'center',
-    paddingVertical: 5,
-  },
-  bottomNavText: {
-    fontSize: 12,
-    marginTop: 2,
-    color: '#777',
-  },
-  qrScanButton: {
+  acceptButton: {
     backgroundColor: '#3498db',
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
+    paddingVertical: 14,
+    borderRadius: 8,
     alignItems: 'center',
-    marginBottom: 15,
-    shadowColor: '#3498db',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4.65,
-    elevation: 6,
+  },
+  acceptButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 
-export default WaiterHomeScreen;
+export default PrivacyPolicyScreen;
