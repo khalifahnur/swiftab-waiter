@@ -31,10 +31,15 @@ const OnboardingScreen = () => {
     }
   ];
 
-  const HandleLastOnboard =async ()=> {
-    router.replace('/(auth)')
-    await AsyncStorage.setItem('hasSeenOnboard', 'true');
-  }
+  const handleLastOnboard = async () => {
+    try {
+      await AsyncStorage.setItem('hasSeenOnboard', 'true');
+      await router.replace('/(auth)');
+    } catch (error) {
+      console.error("Error setting onboard status:", error);
+    }
+  };
+  
 
   return (
     <View style={styles.container}>
@@ -76,7 +81,7 @@ const OnboardingScreen = () => {
       {currentPage === slides.length - 1 && (
         <TouchableOpacity
           style={styles.getStartedButton}
-          onPress={HandleLastOnboard}>
+          onPress={handleLastOnboard}>
           <Text style={styles.getStartedText}>Get Started</Text>
         </TouchableOpacity>
       )}
