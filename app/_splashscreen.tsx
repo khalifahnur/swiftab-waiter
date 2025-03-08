@@ -19,11 +19,7 @@ export default function SplashScreen() {
           AsyncStorage.getItem('waiterObj')
         ]);
 
-        // Add minimum 1s delay for better UX
-        await Promise.all([
-          new Promise(resolve => setTimeout(resolve, 1000)),
-          ExpoSplashScreen.hideAsync()
-        ]);
+        await new Promise(resolve => setTimeout(resolve, 1000));
 
         if (!isMounted) return;
 
@@ -31,7 +27,7 @@ export default function SplashScreen() {
         const authToken = parsedUser?.token;
 
         // Handle navigation
-        if (!hasSeenOnboard) {
+        if (hasSeenOnboard === null) {
           router.replace('/(onboard)');
         } else if (authToken) {
           router.replace('/(tabs)');
@@ -39,9 +35,15 @@ export default function SplashScreen() {
           router.replace('/(auth)');
         }
 
+        if (isMounted) {
+          await ExpoSplashScreen.hideAsync();
+        }
       } catch (error) {
         console.error(error);
-        router.replace('/(auth)/SigninScreen');
+        if (isMounted) {
+          router.replace('/(auth)/SigninScreen');
+          await ExpoSplashScreen.hideAsync();
+        }
       }
     };
 
