@@ -1,6 +1,7 @@
 import { fetchOrdersByTab } from "@/api/api";
-import { api } from "@/api/baseUrl";
+import { baseUrl } from "@/api/baseUrl";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import Toast from "react-native-toast-message";
 
 export const useWaiterOrders = (
   restaurantId: string | undefined,
@@ -16,7 +17,7 @@ export const useWaiterOrders = (
 
 interface UpdateOrderPayload {
   orderId: string;
-  status: string;
+  orderStatus: string;
   servedBy: string;
 }
 
@@ -24,18 +25,79 @@ export const useUpdateOrderStatus = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ orderId, status, servedBy }: UpdateOrderPayload) => {
-      const response = await api.put(`/orders/update-status/${orderId}`, {
-        status,
+    mutationFn: async ({
+      orderId,
+      orderStatus,
+      servedBy,
+    }: UpdateOrderPayload) => {
+      const response = await baseUrl.patch(`/orders/update-status/${orderId}`, {
+        orderStatus,
         servedBy,
       });
       return response.data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["orders"] });
+    onSuccess: async (responseData, variables) => {
+      const { orderId } = variables;
+      await queryClient.setQueriesData(
+        { queryKey: ["orders"] },
+        (oldData: any) => {
+          if (!oldData) return oldData;
+          return oldData.filter((order: any) => order._id !== orderId);
+        },
+      );
+      await queryClient.invalidateQueries({ queryKey: ["orders"] });
+      Toast.show({
+        type: "success",
+        text1: `${responseData.message}`,
+      });
     },
-    onError: (error) => {
-      console.error("Failed to update status:", error);
+    onError: (error: any) => {
+      const errorMessage = error.response?.data?.message || error.message;
+      Toast.show({
+        type: "error",
+        text1: `${errorMessage}`,
+      });
+    },
+  });
+};
+
+interface CompleteOrderPayload {
+  orderId: string;
+  status: string;
+  paymentStatus: string;
+}
+
+export const useCompleteOrder = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      orderId,
+      status,
+      paymentStatus,
+    }: CompleteOrderPayload) => {
+      const response = await baseUrl.patch(
+        `/orders/complete-order/${orderId}`,
+        {
+          status,
+          paymentStatus,
+        },
+      );
+      return response.data;
+    },
+    onSuccess: async (responseData) => {
+      await queryClient.invalidateQueries({ queryKey: ["orders"] });
+      Toast.show({
+        type: "success",
+        text1: `${responseData.message}`,
+      });
+    },
+    onError: (error: any) => {
+      const errorMessage = error.response?.data?.message || error.message;
+      Toast.show({
+        type: "error",
+        text1: `${errorMessage}`,
+      });
     },
   });
 };

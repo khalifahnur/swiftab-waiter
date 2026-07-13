@@ -36,7 +36,7 @@ export function AnimatedSplashOverlay() {
   const image = (
     <Image
       style={styles.image}
-      source={require("@/assets/images/expo-logo.png")}
+      source={require("@/assets/images/adaptive-icon.png")}
     />
   );
 
@@ -125,7 +125,7 @@ export function AnimatedIcon() {
       >
         <Image
           style={styles.image}
-          source={require("@/assets/images/expo-logo.png")}
+          source={require("@/assets/images/adaptive-icon.png")}
         />
       </Animated.View>
     </View>
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
   },
   background: {
     borderRadius: 40,
-    experimental_backgroundImage: `linear-gradient(180deg, #3C9FFE, #0274DF)`,
+    experimental_backgroundImage: `linear-gradient(180deg, #39fafa, ##00dbdb)`,
     width: 128,
     height: 128,
     position: "absolute",

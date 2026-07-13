@@ -1,9 +1,9 @@
 import { AuthData, AuthResponse, setPassword, signUpData } from "../../types";
-import { api } from "./baseUrl";
+import { baseUrl } from "./baseUrl";
 
 export const loginUser = async (data: AuthData): Promise<AuthResponse> => {
   try {
-    const response = await api.post<AuthResponse>(
+    const response = await baseUrl.post<AuthResponse>(
       "/auth/waiter/waiter-app-signin",
       data,
     );
@@ -15,7 +15,10 @@ export const loginUser = async (data: AuthData): Promise<AuthResponse> => {
 
 export const signUpWaiter = async (data: signUpData): Promise<AuthResponse> => {
   try {
-    const response = await api.post<AuthResponse>("/auth/waiter/signup", data);
+    const response = await baseUrl.post<AuthResponse>(
+      "/auth/waiter/signup",
+      data,
+    );
     return response.data;
   } catch (error: any) {
     if (error?.response) {
@@ -32,7 +35,7 @@ export const waiterSetPassword = async (
   data: setPassword,
 ): Promise<AuthResponse> => {
   try {
-    const response = await api.post<AuthResponse>(
+    const response = await baseUrl.post<AuthResponse>(
       "/auth/waiter/waiter-new-password",
       data,
     );
@@ -51,9 +54,12 @@ export const waiterSetPassword = async (
 
 export const fetchOrdersByTab = async (restaurantId: string, tab: string) => {
   try {
-    const response = await api.get(`/orders/fetch-all-order/${restaurantId}`, {
-      params: { tab },
-    });
+    const response = await baseUrl.get(
+      `/orders/fetch-all-order/${restaurantId}`,
+      {
+        params: { tab },
+      },
+    );
     return response.data.data;
   } catch (error: any) {
     if (error?.response) {

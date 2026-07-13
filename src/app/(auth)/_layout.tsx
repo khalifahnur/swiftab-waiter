@@ -3,6 +3,7 @@ import { Redirect, Stack } from "expo-router";
 
 export default function AuthLayout() {
   const waiterData = useAuthStore((state) => state.waiterData);
+
   if (waiterData) {
     return <Redirect href="/(app)" />;
   }

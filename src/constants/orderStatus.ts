@@ -63,8 +63,6 @@ const FALLBACK_META: StatusMeta = {
   ink: "#374151",
 };
 
-// Backend status strings don't always match the four canonical queue names —
-// map the real values here in one place so cards and tabs never fall out of sync.
 const STATUS_ALIASES: Record<string, OrderStatusKey> = {
   placed: "not-taken",
   pending: "not-taken",
@@ -74,10 +72,6 @@ const STATUS_ALIASES: Record<string, OrderStatusKey> = {
   done: "completed",
 };
 
-/**
- * Normalizes any backend status string ("Ready_To_Pay", "ready-to-pay", "PAYMENT"...)
- * into a lookup key, so this keeps working even if the API's casing or wording changes.
- */
 export function getStatusMeta(status?: string | null): StatusMeta {
   if (!status) return FALLBACK_META;
   const key = status
