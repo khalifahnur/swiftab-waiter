@@ -112,7 +112,7 @@ export default function Profile() {
           <SettingsRow
             icon="help-circle-outline"
             label="Help Center"
-            onPress={() => {}}
+            onPress={() => router.push("/screens/support")}
           />
           <SettingsRow
             icon="chatbubble-ellipses-outline"
@@ -131,12 +131,12 @@ export default function Profile() {
           <SettingsRow
             icon="document-text-outline"
             label="Terms of Service"
-            onPress={() => {}}
+            onPress={() => router.push("/screens/legal")}
           />
           <SettingsRow
             icon="shield-checkmark-outline"
             label="Privacy Policy"
-            onPress={() => {}}
+            onPress={() => router.push("/screens/legal")}
             isLast
           />
         </SettingsSection>

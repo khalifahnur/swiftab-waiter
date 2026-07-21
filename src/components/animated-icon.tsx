@@ -150,19 +150,19 @@ const styles = StyleSheet.create({
     zIndex: 100,
   },
   image: {
-    width: 76,
-    height: 71,
+    width: 200,
+    height: 200,
   },
   background: {
     borderRadius: 40,
-    experimental_backgroundImage: `linear-gradient(180deg, #39fafa, ##00dbdb)`,
+    experimental_backgroundImage: `linear-gradient(180deg, #008080, #008080)`,
     width: 128,
     height: 128,
     position: "absolute",
   },
   splashOverlay: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: "#208AEF",
+    backgroundColor: "#008080",
     alignItems: "center",
     justifyContent: "center",
     zIndex: 1000,

@@ -3,27 +3,20 @@ import { baseUrl } from "./baseUrl";
 
 export const loginUser = async (data: AuthData): Promise<AuthResponse> => {
   try {
-    const response = await baseUrl.post<AuthResponse>(
-      "/auth/waiter/waiter-app-signin",
-      data,
-    );
+    const response = await baseUrl.post<AuthResponse>("/waiters/login", data);
     return response.data;
   } catch (error: any) {
-    throw new Error(error?.response?.data?.message || "An error occurred");
+    throw new Error(error?.response?.data?.error);
   }
 };
 
 export const signUpWaiter = async (data: signUpData): Promise<AuthResponse> => {
   try {
-    const response = await baseUrl.post<AuthResponse>(
-      "/auth/waiter/signup",
-      data,
-    );
+    const response = await baseUrl.post<AuthResponse>("/waiters/verify", data);
     return response.data;
   } catch (error: any) {
     if (error?.response) {
-      const errorMessage =
-        error?.response?.data?.message || "An error occurred during sign up.";
+      const errorMessage = error?.response?.data?.error;
       throw new Error(errorMessage);
     } else {
       throw new Error("Network error or no response from server.");
@@ -36,15 +29,13 @@ export const waiterSetPassword = async (
 ): Promise<AuthResponse> => {
   try {
     const response = await baseUrl.post<AuthResponse>(
-      "/auth/waiter/waiter-new-password",
+      "/waiters/password",
       data,
     );
     return response.data;
   } catch (error: any) {
     if (error?.response) {
-      const errorMessage =
-        error?.response?.data?.message ||
-        "An error occurred during setting password.";
+      const errorMessage = error?.response?.data?.error;
       throw new Error(errorMessage);
     } else {
       throw new Error("Network error or no response from server.");
@@ -55,7 +46,7 @@ export const waiterSetPassword = async (
 export const fetchOrdersByTab = async (restaurantId: string, tab: string) => {
   try {
     const response = await baseUrl.get(
-      `/orders/fetch-all-order/${restaurantId}`,
+      `/waiters/restaurants/${restaurantId}/orders`,
       {
         params: { tab },
       },
@@ -63,13 +54,9 @@ export const fetchOrdersByTab = async (restaurantId: string, tab: string) => {
     return response.data.data;
   } catch (error: any) {
     if (error?.response) {
-      console.error(`Error fetching ${tab} orders:`, error.response.data.error);
-      const errorMessage =
-        error?.response?.data?.message ||
-        "An error occurred while fetching orders.";
+      const errorMessage = error?.response?.data?.error;
       throw new Error(errorMessage);
     } else {
-      console.error("Network error or no response:", error);
       throw new Error("Network error or no response from server.");
     }
   }

@@ -30,7 +30,7 @@ export const useUpdateOrderStatus = () => {
       orderStatus,
       servedBy,
     }: UpdateOrderPayload) => {
-      const response = await baseUrl.patch(`/orders/update-status/${orderId}`, {
+      const response = await baseUrl.put(`/waiters/orders/${orderId}/status`, {
         orderStatus,
         servedBy,
       });
@@ -52,7 +52,7 @@ export const useUpdateOrderStatus = () => {
       });
     },
     onError: (error: any) => {
-      const errorMessage = error.response?.data?.message || error.message;
+      const errorMessage = error.response?.data?.error;
       Toast.show({
         type: "error",
         text1: `${errorMessage}`,
@@ -76,8 +76,8 @@ export const useCompleteOrder = () => {
       status,
       paymentStatus,
     }: CompleteOrderPayload) => {
-      const response = await baseUrl.patch(
-        `/orders/complete-order/${orderId}`,
+      const response = await baseUrl.put(
+        `/waiters/orders/${orderId}/complete`,
         {
           status,
           paymentStatus,
@@ -93,7 +93,7 @@ export const useCompleteOrder = () => {
       });
     },
     onError: (error: any) => {
-      const errorMessage = error.response?.data?.message || error.message;
+      const errorMessage = error.response?.data?.error;
       Toast.show({
         type: "error",
         text1: `${errorMessage}`,

@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "swiftab-waiter",
+    "name": "Swiftab Waiter",
     "slug": "swiftab-waiter",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "swiftabwaiter",
@@ -28,7 +28,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#008080",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
@@ -38,6 +38,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "3910984d-3bdd-49aa-9bec-58465f6a379b"
+      }
     }
   }
 }
