@@ -1,132 +1,29 @@
-import {
-  useCompleteOrder,
-  useUpdateOrderStatus,
-} from "@/hooks/apihook/orderHook";
-import { useAuthStore } from "@/store/useAuthStore";
 import { Ionicons } from "@react-native-vector-icons/ionicons";
 import { BlurView } from "expo-blur";
-import * as Haptics from "expo-haptics";
-import {
-  Alert,
-  Linking,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { useState } from "react";
+import { Linking, Platform, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Toast from "react-native-toast-message";
+
+import { errorMessage } from "@/api/client";
+import { getStatusMeta } from "@/constants/orderStatus";
+import { C } from "@/constants/theme";
+import { useCancelOrder, useCloseOrder, useServeOrder } from "@/hooks/queries";
+import { feedback } from "@/lib/feedback";
+import { clock, formatKes, isPaymentMethod, PAYMENT_METHODS, paymentLabel, tableLabel, timeAgo, titleCase } from "@/lib/format";
+import { notify } from "@/lib/toast";
+import { useWaiter } from "@/store/useAuthStore";
+import type { Order, PaymentMethod } from "@/types";
+
 import { AuthButton } from "./ui/AuthButton";
 
-export interface OrderItem {
-  _id: string;
-  name: string;
-  cost: number;
-  quantity: number;
-}
-
-export interface OrderCustomer {
-  _id: string;
-  name: string;
-  phoneNumber?: string;
-}
-
-// Widened string unions: autocomplete for known values, but a new status
-// string from the API won't blow up type-checking.
-export type OrderStatus =
-  | "placed"
-  | "not-taken"
-  | "served"
-  | "ready_to_pay"
-  | "completed"
-  | (string & {});
-
-export type PaymentStatus = "paid" | "unpaid" | (string & {});
-
-export interface Order {
-  _id: string;
-  guests: number;
-  items: OrderItem[];
-  paymentMethod?: string;
-  paymentStatus: PaymentStatus;
-  status: OrderStatus;
-  tableNumber: string;
-  time: string;
-  totalAmount: number;
-  userId?: OrderCustomer;
-}
-
-const COLORS = {
-  paper: "#F2E8D6",
-  card: "#FBF6EA",
-  cardBorder: "#E7DAB8",
-  ink: "#2B2621",
-  inkMuted: "#8C8171",
-  divider: "#DED0AC",
-  accent: "#008080",
-};
-
-const STATUS_CONFIG: Record<
-  string,
-  { label: string; ink: string; paper: string }
-> = {
-  placed: { label: "New Order", ink: "#B4530F", paper: "#FBE9CE" },
-  "not-taken": { label: "New Order", ink: "#B4530F", paper: "#FBE9CE" },
-  served: { label: "Served", ink: "#0F6E63", paper: "#DCEEE8" },
-  ready_to_pay: { label: "Bill Requested", ink: "#B0413E", paper: "#FAE3DF" },
-  completed: { label: "Completed", ink: "#3F7D45", paper: "#E4F0DE" },
-};
-const DEFAULT_STAMP = {
-  label: "Order",
-  ink: COLORS.inkMuted,
-  paper: "#EFE7D2",
-};
-
-const MONO_FONT = Platform.select({
-  ios: "Menlo",
-  android: "monospace",
-  default: "monospace",
-});
-
+const MONO_FONT = Platform.select({ ios: "Menlo", android: "monospace", default: "monospace" });
 const PERF_DOTS = Array.from({ length: 24 });
 
-const currencyFormatter = new Intl.NumberFormat("en-KE");
-const formatCurrency = (amount?: number) =>
-  `Ksh ${currencyFormatter.format(amount ?? 0)}`;
-
-const toTitleCase = (value: string) =>
-  value.replace(
-    /\w\S*/g,
-    (word) => word.charAt(0).toUpperCase() + word.slice(1),
-  );
-
-function formatOrderTime(iso: string) {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "—";
-  const clock = date.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-  });
-  const diffMin = Math.round((Date.now() - date.getTime()) / 60000);
-
-  if (diffMin < 1) return "Just now";
-  if (diffMin < 60) return `${diffMin} min ago`;
-  if (diffMin < 60 * 24) return `${Math.round(diffMin / 60)} hr ago · ${clock}`;
-  return `${date.toLocaleDateString("en-US", { month: "short", day: "numeric" })} · ${clock}`;
-}
-
 function StatusStamp({ status }: { status: string }) {
-  const cfg = STATUS_CONFIG[status] ?? DEFAULT_STAMP;
+  const meta = getStatusMeta(status);
   return (
-    <View
-      style={[
-        styles.stamp,
-        { borderColor: cfg.ink, backgroundColor: cfg.paper },
-      ]}
-    >
-      <Text style={[styles.stampText, { color: cfg.ink }]}>{cfg.label}</Text>
+    <View style={[styles.stamp, { borderColor: meta.ink, backgroundColor: meta.pale }]}>
+      <Text style={[styles.stampText, { color: meta.ink }]}>{meta.label}</Text>
     </View>
   );
 }
@@ -141,179 +38,230 @@ function PerforatedRule() {
   );
 }
 
-export default function OrderDetailView({
-  order,
-  onClose,
-}: {
-  order: Order;
-  onClose: () => void;
-}) {
-  const waiterData = useAuthStore((state) => state.waiterData);
-  const waiterId = waiterData?.waiter?._id;
-  const { mutateAsync: updateStatusAsync, isPending: isServing } =
-    useUpdateOrderStatus();
-  const { mutateAsync: completeOrderAsync, isPending: isCompleting } =
-    useCompleteOrder();
+/** The receipt as plain text, for sharing or sending to a guest. */
+function receiptText(order: Order, restaurantName?: string): string {
+  const lines = order.items.map((item) => `${item.quantity} x ${titleCase(item.name)}  ${formatKes(item.cost * item.quantity)}`);
+  return [
+    restaurantName || "Swiftab",
+    `Table ${tableLabel(order.tableNumber)}${order.orderId ? ` · ${order.orderId}` : ""}`,
+    "",
+    ...lines,
+    "",
+    `Total: ${formatKes(order.totalAmount)}`,
+    order.paymentStatus === "paid" ? `Paid${order.paymentMethod ? ` with ${paymentLabel(order.paymentMethod)}` : ""}` : "Payment pending",
+  ].join("\n");
+}
 
-  const handleServeOrder = async () => {
-    if (!waiterId) {
-      Alert.alert(
-        "Error",
-        "Could not verify your Waiter ID. Please log in again.",
-      );
-      return;
-    }
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    try {
-      await updateStatusAsync({
-        orderId: order._id,
-        orderStatus: "served",
-        servedBy: waiterId,
-      });
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      onClose();
-    } catch (error) {
-      console.log("Order update failed:", error);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Toast.show({
-        type: "error",
-        text1: "Couldn't update the order",
-        text2: "Please try again.",
-      });
-    }
-  };
+/** One order as a ticket, with the action that moves it to the next stage. */
+export default function OrderDetailView({ order, onClose }: { order: Order; onClose: () => void }) {
+  const waiter = useWaiter();
+  const serve = useServeOrder();
+  const cancel = useCancelOrder();
+  const close = useCloseOrder();
 
-  const handleCompleteOrder = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    try {
-      await completeOrderAsync({
-        orderId: order._id,
-        status: "completed",
-        paymentStatus: "paid",
-      });
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      onClose();
-    } catch (error) {
-      console.log("Order completion failed:", error);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Toast.show({
-        type: "error",
-        text1: "Couldn't complete the order",
-        text2: "Please try again.",
-      });
-    }
-  };
+  // Taking payment: the method the guest asked for is pre-selected.
+  const [paying, setPaying] = useState(false);
+  const [method, setMethod] = useState<PaymentMethod>(isPaymentMethod(order.paymentMethod) ? order.paymentMethod : "cash");
+  const [reference, setReference] = useState("");
+  const [confirmingCancel, setConfirmingCancel] = useState(false);
 
-  const handleCall = () => {
-    const phone = order.userId?.phoneNumber;
-    if (!phone) return;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    Linking.openURL(`tel:${phone.replace(/\s+/g, "")}`).catch(() => {
-      Alert.alert(
-        "Unable to place call",
-        "Please check the number and try again.",
-      );
-    });
-  };
-
-  const tableRaw = String(order.tableNumber ?? "").trim() || "N/A";
-  const tableDisplayNumber = tableRaw.replace(/^table\s*/i, "") || tableRaw;
-  const shortId = order._id ? order._id.slice(-6).toUpperCase() : "------";
+  const table = tableLabel(order.tableNumber);
+  const ticket = order.orderId || `#${order._id.slice(-6).toUpperCase()}`;
   const isPaid = order.paymentStatus === "paid";
-  const guestCount = order.guests ?? 0;
-  const customerName = order.userId?.name
-    ? toTitleCase(order.userId.name)
-    : "Walk-in";
+  const guests = order.guests ?? 0;
+  const customer = order.userId?.name ? titleCase(order.userId.name) : "Walk-in";
+  const phone = order.userId?.phoneNumber;
+  const busy = serve.isPending || cancel.isPending || close.isPending;
 
-  const renderItems = () => {
-    if (!order.items?.length) {
-      return <Text style={styles.emptyText}>No items on this order</Text>;
-    }
-    return order.items.map((item) => (
-      <View key={item._id} style={styles.itemRow}>
-        <Text style={styles.itemQty}>{item.quantity}×</Text>
-        <Text style={styles.itemName} numberOfLines={2}>
-          {toTitleCase(item.name)}
-        </Text>
-        <Text style={styles.itemPrice}>
-          {formatCurrency(item.cost * item.quantity)}
-        </Text>
-      </View>
-    ));
+  const fail = (title: string) => (error: unknown) => {
+    feedback.error();
+    notify.error(title, errorMessage(error));
   };
 
-  const renderFooter = () => {
-    if (order.status === "placed" || order.status === "not-taken") {
+  const onServe = () => {
+    feedback.press();
+    serve.mutate(
+      { orderId: order._id },
+      {
+        onSuccess: () => {
+          feedback.success();
+          notify.success(`Table ${table} served`, "It is now in the Served queue.");
+          onClose();
+        },
+        onError: fail("Could not take this order"),
+      },
+    );
+  };
+
+  const onCancel = () => {
+    feedback.press();
+    cancel.mutate(
+      { orderId: order._id },
+      {
+        onSuccess: () => {
+          notify.success("Order cancelled", `Table ${table} has been told.`);
+          onClose();
+        },
+        onError: fail("Could not cancel this order"),
+      },
+    );
+  };
+
+  const onClosePayment = () => {
+    feedback.press();
+    close.mutate(
+      { orderId: order._id, paymentMethod: method, paymentReference: reference },
+      {
+        onSuccess: () => {
+          feedback.success();
+          notify.success(`Table ${table} closed`, `${formatKes(order.totalAmount)} · ${paymentLabel(method)}`);
+          onClose();
+        },
+        onError: fail("Could not close this table"),
+      },
+    );
+  };
+
+  const onCall = () => {
+    if (!phone) return;
+    feedback.tap();
+    Linking.openURL(`tel:${phone.replace(/[^\d+]/g, "")}`).catch(() => notify.error("This phone cannot place calls"));
+  };
+
+  const onShare = () => {
+    Share.share({ message: receiptText(order, waiter?.restaurantName) }).catch(() => undefined);
+  };
+
+  const footer = () => {
+    if (paying) {
       return (
         <View style={styles.footer}>
-          <AuthButton
-            label="Accept & Serve"
-            onPress={handleServeOrder}
-            loading={isServing}
-          />
+          <Text style={pay.title}>How did table {table} pay?</Text>
+          <View style={pay.methods}>
+            {PAYMENT_METHODS.map((option) => {
+              const active = option.key === method;
+              return (
+                <Pressable
+                  key={option.key}
+                  testID={`method-${option.key}`}
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: active }}
+                  aria-checked={active}
+                  accessibilityLabel={option.label}
+                  onPress={() => {
+                    feedback.tap();
+                    setMethod(option.key);
+                  }}
+                  style={[pay.method, active && pay.methodActive]}
+                >
+                  <Ionicons name={option.icon} size={15} color={active ? C.white : C.ink} />
+                  <Text style={[pay.methodText, active && { color: C.white }]}>{option.label}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+          {method !== "cash" && (
+            <TextInput
+              testID="payment-reference"
+              value={reference}
+              onChangeText={(text) => setReference(text.toUpperCase().slice(0, 40))}
+              placeholder={method === "card" ? "Receipt or approval code (optional)" : "Transaction code, e.g. SKL7X2M9QP (optional)"}
+              placeholderTextColor={C.inkMuted}
+              autoCapitalize="characters"
+              autoCorrect={false}
+              style={pay.input}
+            />
+          )}
+          <View style={pay.actions}>
+            <Pressable accessibilityRole="button" disabled={close.isPending} onPress={() => setPaying(false)} style={pay.back}>
+              <Text style={pay.backText}>Back</Text>
+            </Pressable>
+            <View style={{ flex: 1 }}>
+              <AuthButton testID="confirm-payment" label={`Confirm ${formatKes(order.totalAmount)}`} onPress={onClosePayment} loading={close.isPending} />
+            </View>
+          </View>
+        </View>
+      );
+    }
+
+    if (order.status === "placed" && confirmingCancel) {
+      return (
+        <View style={styles.footer}>
+          <Text style={pay.title}>Cancel the order for table {table}?</Text>
+          <Text style={pay.hint}>The guest is told straight away. This cannot be undone.</Text>
+          <View style={pay.actions}>
+            <Pressable accessibilityRole="button" disabled={cancel.isPending} onPress={() => setConfirmingCancel(false)} style={pay.back}>
+              <Text style={pay.backText}>Keep order</Text>
+            </Pressable>
+            <Pressable
+              testID="confirm-cancel"
+              accessibilityRole="button"
+              disabled={cancel.isPending}
+              onPress={onCancel}
+              style={[pay.destructive, { opacity: cancel.isPending ? 0.6 : 1 }]}
+            >
+              <Text style={pay.destructiveText}>{cancel.isPending ? "Cancelling…" : "Cancel order"}</Text>
+            </Pressable>
+          </View>
+        </View>
+      );
+    }
+    if (order.status === "placed") {
+      return (
+        <View style={styles.footer}>
+          <AuthButton testID="serve-order" label="Accept & serve" onPress={onServe} loading={serve.isPending} disabled={busy} />
+          <Pressable testID="cancel-order" accessibilityRole="button" disabled={busy} onPress={() => setConfirmingCancel(true)} style={pay.link}>
+            <Text style={pay.linkTextDanger}>Cancel order</Text>
+          </Pressable>
         </View>
       );
     }
     if (order.status === "ready_to_pay") {
       return (
         <View style={styles.footer}>
-          <AuthButton
-            label="Process Payment & Close"
-            onPress={handleCompleteOrder}
-            loading={isCompleting}
-          />
+          <AuthButton testID="take-payment" label="Take payment & close table" onPress={() => setPaying(true)} disabled={busy} />
         </View>
       );
     }
     if (order.status === "served") {
       return (
-        <View style={[styles.footer, styles.footerNote]}>
-          <Ionicons
-            name="restaurant-outline"
-            size={16}
-            color={COLORS.inkMuted}
-          />
-          <Text style={styles.footerNoteText}>
-            Served — awaiting bill request
-          </Text>
+        <View style={styles.footer}>
+          <View style={[styles.footerNote, { marginBottom: 10 }]}>
+            <Ionicons name="restaurant-outline" size={16} color={C.inkMuted} />
+            <Text style={styles.footerNoteText}>Served — waiting for the guest to ask for the bill</Text>
+          </View>
+          <AuthButton testID="pay-now" label="Guest is paying now" variant="dark" onPress={() => setPaying(true)} disabled={busy} />
         </View>
       );
     }
     if (order.status === "completed") {
       return (
-        <View style={[styles.footer, styles.footerNote]}>
-          <Ionicons name="checkmark-circle" size={16} color="#3F7D45" />
-          <Text style={styles.footerNoteText}>Order completed</Text>
+        <View style={styles.footer}>
+          <AuthButton label="Share receipt" variant="dark" onPress={onShare} />
         </View>
       );
     }
     return null;
   };
 
-  const renderContent = () => (
+  const content = (
     <View style={styles.sheetContent}>
-      {Platform.OS === "android" && <View style={styles.handle} />}
+      {Platform.OS !== "ios" && <View style={styles.handle} />}
 
       <View style={styles.topBar}>
         <Pressable
+          testID="close-ticket"
           onPress={onClose}
           hitSlop={10}
           accessibilityRole="button"
           accessibilityLabel="Close order details"
-          style={({ pressed }) => [
-            styles.closeCircle,
-            { opacity: pressed ? 0.5 : 1 },
-          ]}
+          style={({ pressed }) => [styles.closeCircle, { opacity: pressed ? 0.5 : 1 }]}
         >
-          <Ionicons name="close" size={18} color={COLORS.ink} />
+          <Ionicons name="close" size={18} color={C.ink} />
         </Pressable>
       </View>
 
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         <View style={styles.ticket}>
           <View style={[styles.notch, styles.notchLeft]} />
           <View style={[styles.notch, styles.notchRight]} />
@@ -321,26 +269,25 @@ export default function OrderDetailView({
           <View style={styles.ticketHeader}>
             <View>
               <Text style={styles.kicker}>TABLE</Text>
-              <Text style={styles.tableNumber}>{tableDisplayNumber}</Text>
+              <Text style={styles.tableNumber}>{table}</Text>
             </View>
             <StatusStamp status={order.status} />
           </View>
 
           <View style={styles.metaRow}>
+            {guests > 0 && (
+              <View style={styles.metaChip}>
+                <Ionicons name="people-outline" size={13} color={C.inkMuted} />
+                <Text style={styles.metaChipText}>
+                  {guests} {guests === 1 ? "guest" : "guests"}
+                </Text>
+              </View>
+            )}
             <View style={styles.metaChip}>
-              <Ionicons
-                name="people-outline"
-                size={13}
-                color={COLORS.inkMuted}
-              />
+              <Ionicons name="time-outline" size={13} color={C.inkMuted} />
               <Text style={styles.metaChipText}>
-                {guestCount} {guestCount === 1 ? "Guest" : "Guests"}
-              </Text>
-            </View>
-            <View style={styles.metaChip}>
-              <Ionicons name="time-outline" size={13} color={COLORS.inkMuted} />
-              <Text style={styles.metaChipText}>
-                {formatOrderTime(order.time)}
+                {timeAgo(order.time)}
+                {clock(order.time) ? ` · ${clock(order.time)}` : ""}
               </Text>
             </View>
           </View>
@@ -348,23 +295,16 @@ export default function OrderDetailView({
           <View style={styles.customerRow}>
             <View style={{ flex: 1 }}>
               <Text style={styles.kicker}>GUEST</Text>
-              <Text style={styles.customerName}>{customerName}</Text>
-              {!!order.userId?.phoneNumber && (
-                <Text style={styles.customerPhone}>
-                  {order.userId?.phoneNumber}
-                </Text>
-              )}
+              <Text style={styles.customerName}>{customer}</Text>
+              {!!phone && <Text style={styles.customerPhone}>{phone}</Text>}
             </View>
-            {!!order.userId?.phoneNumber && (
+            {!!phone && (
               <Pressable
-                onPress={handleCall}
+                onPress={onCall}
                 hitSlop={10}
                 accessibilityRole="button"
-                accessibilityLabel={`Call ${customerName}`}
-                style={({ pressed }) => [
-                  styles.callButton,
-                  { opacity: pressed ? 0.75 : 1 },
-                ]}
+                accessibilityLabel={`Call ${customer}`}
+                style={({ pressed }) => [styles.callButton, { opacity: pressed ? 0.75 : 1 }]}
               >
                 <Ionicons name="call" size={16} color="#FFFFFF" />
               </Pressable>
@@ -374,57 +314,61 @@ export default function OrderDetailView({
           <PerforatedRule />
 
           <Text style={styles.sectionLabel}>ORDER ITEMS</Text>
-          <View style={styles.itemsList}>{renderItems()}</View>
+          <View style={styles.itemsList}>
+            {order.items.length === 0 ? (
+              <Text style={styles.emptyText}>No items on this order</Text>
+            ) : (
+              order.items.map((item, index) => (
+                <View key={`${item._id}-${index}`}>
+                  <View style={styles.itemRow}>
+                    <Text style={styles.itemQty}>{item.quantity}×</Text>
+                    <Text style={styles.itemName} numberOfLines={2}>
+                      {titleCase(item.name)}
+                    </Text>
+                    <Text style={styles.itemPrice}>{formatKes(item.cost * item.quantity)}</Text>
+                  </View>
+                  {!!item.note && <Text style={pay.note}>↳ {item.note}</Text>}
+                </View>
+              ))
+            )}
+          </View>
 
           <PerforatedRule />
 
           <View style={styles.totalsBlock}>
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>Total</Text>
-              <Text style={styles.totalAmount}>
-                {formatCurrency(order.totalAmount)}
-              </Text>
+              <Text style={styles.totalAmount}>{formatKes(order.totalAmount)}</Text>
             </View>
             <View style={styles.paymentRow}>
-              <View
-                style={[
-                  styles.paymentDot,
-                  { backgroundColor: isPaid ? "#3F7D45" : "#B0413E" },
-                ]}
-              />
-              <Text
-                style={[
-                  styles.paymentText,
-                  { color: isPaid ? "#3F7D45" : "#B0413E" },
-                ]}
-              >
+              <View style={[styles.paymentDot, { backgroundColor: isPaid ? C.success : C.danger }]} />
+              <Text style={[styles.paymentText, { color: isPaid ? C.success : C.danger }]}>
                 {isPaid
-                  ? `Paid${order.paymentMethod ? ` · ${order.paymentMethod}` : ""}`
-                  : "Payment pending"}
+                  ? `Paid${order.paymentMethod ? ` · ${paymentLabel(order.paymentMethod)}` : ""}`
+                  : order.paymentMethod
+                    ? `Wants to pay with ${paymentLabel(order.paymentMethod)}`
+                    : "Payment pending"}
               </Text>
             </View>
+            {!!order.waiter && <Text style={pay.servedBy}>Served by {order.waiter}</Text>}
           </View>
 
-          <Text style={styles.ticketId}>TICKET #{shortId}</Text>
+          <Text style={styles.ticketId}>TICKET {ticket}</Text>
         </View>
       </ScrollView>
 
-      {renderFooter()}
+      {footer()}
     </View>
   );
 
-  if (Platform.OS === "android") {
+  if (Platform.OS !== "ios") {
     return (
       <View style={styles.container}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={onClose}>
-          <BlurView
-            intensity={80}
-            tint="dark"
-            style={StyleSheet.absoluteFill}
-          />
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Close order details">
+          <BlurView intensity={80} tint="dark" style={StyleSheet.absoluteFill} />
         </Pressable>
         <SafeAreaView edges={["bottom"]} style={styles.sheetAndroid}>
-          {renderContent()}
+          {content}
         </SafeAreaView>
       </View>
     );
@@ -432,15 +376,55 @@ export default function OrderDetailView({
 
   return (
     <SafeAreaView edges={["top", "bottom"]} style={styles.sheetIOS}>
-      {renderContent()}
+      {content}
     </SafeAreaView>
   );
 }
 
+const pay = StyleSheet.create({
+  title: { fontSize: 15, fontWeight: "700", color: C.ink, marginBottom: 10 },
+  methods: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 10 },
+  method: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 12,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: C.card,
+    borderWidth: 1,
+    borderColor: C.cardBorder,
+  },
+  methodActive: { backgroundColor: C.accent, borderColor: C.accent },
+  methodText: { fontSize: 13.5, fontWeight: "700", color: C.ink },
+  input: {
+    height: 46,
+    borderRadius: 12,
+    backgroundColor: C.card,
+    borderWidth: 1,
+    borderColor: C.cardBorder,
+    paddingHorizontal: 12,
+    fontSize: 14,
+    color: C.ink,
+    marginBottom: 10,
+    fontFamily: MONO_FONT,
+  },
+  actions: { flexDirection: "row", alignItems: "center", gap: 10 },
+  back: { height: 52, paddingHorizontal: 18, borderRadius: 12, borderWidth: 1, borderColor: C.cardBorder, alignItems: "center", justifyContent: "center" },
+  backText: { fontSize: 15, fontWeight: "600", color: C.ink },
+  link: { alignItems: "center", paddingTop: 12, paddingBottom: 2 },
+  linkTextDanger: { fontSize: 14, fontWeight: "600", color: C.danger },
+  hint: { fontSize: 13, color: C.inkMuted, marginTop: -4, marginBottom: 12 },
+  destructive: { flex: 1, height: 52, borderRadius: 12, backgroundColor: C.danger, alignItems: "center", justifyContent: "center" },
+  destructiveText: { fontSize: 15, fontWeight: "700", color: C.white },
+  note: { fontFamily: MONO_FONT, fontSize: 12.5, color: C.amber, marginLeft: 28, marginTop: 2 },
+  servedBy: { fontSize: 12.5, color: C.inkMuted, marginTop: 6 },
+});
+
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: "flex-end" },
   sheetAndroid: {
-    backgroundColor: COLORS.paper,
+    backgroundColor: C.paper,
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
     height: "85%",
@@ -448,7 +432,7 @@ const styles = StyleSheet.create({
 
     overflow: "hidden",
   },
-  sheetIOS: { flex: 1, backgroundColor: COLORS.paper },
+  sheetIOS: { flex: 1, backgroundColor: C.paper },
   sheetContent: { flex: 1 },
   handle: {
     width: 36,
@@ -479,10 +463,10 @@ const styles = StyleSheet.create({
   scrollContent: { paddingHorizontal: 16, paddingBottom: 12 },
 
   ticket: {
-    backgroundColor: COLORS.card,
+    backgroundColor: C.card,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: COLORS.cardBorder,
+    borderColor: C.cardBorder,
     paddingHorizontal: 20,
     paddingTop: 24,
     paddingBottom: 18,
@@ -498,7 +482,7 @@ const styles = StyleSheet.create({
     width: 18,
     height: 18,
     borderRadius: 9,
-    backgroundColor: COLORS.paper,
+    backgroundColor: C.paper,
   },
   notchLeft: { left: 22 },
   notchRight: { right: 22 },
@@ -512,14 +496,14 @@ const styles = StyleSheet.create({
   kicker: {
     fontSize: 11,
     fontWeight: "700",
-    color: COLORS.inkMuted,
+    color: C.inkMuted,
     letterSpacing: 1.2,
     marginBottom: 4,
   },
   tableNumber: {
     fontSize: 42,
     fontWeight: "800",
-    color: COLORS.ink,
+    color: C.ink,
     letterSpacing: -1,
     lineHeight: 46,
   },
@@ -545,21 +529,21 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    backgroundColor: COLORS.paper,
+    backgroundColor: C.paper,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 10,
   },
-  metaChipText: { fontSize: 13, fontWeight: "600", color: COLORS.inkMuted },
+  metaChipText: { fontSize: 13, fontWeight: "600", color: C.inkMuted },
 
   customerRow: { flexDirection: "row", alignItems: "center", marginBottom: 4 },
-  customerName: { fontSize: 18, fontWeight: "700", color: COLORS.ink },
-  customerPhone: { fontSize: 13, color: COLORS.inkMuted, marginTop: 2 },
+  customerName: { fontSize: 18, fontWeight: "700", color: C.ink },
+  customerPhone: { fontSize: 13, color: C.inkMuted, marginTop: 2 },
   callButton: {
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: COLORS.accent,
+    backgroundColor: C.accent,
     alignItems: "center",
     justifyContent: "center",
     marginLeft: 12,
@@ -574,13 +558,13 @@ const styles = StyleSheet.create({
     width: 4,
     height: 4,
     borderRadius: 2,
-    backgroundColor: COLORS.divider,
+    backgroundColor: C.divider,
   },
 
   sectionLabel: {
     fontSize: 11,
     fontWeight: "700",
-    color: COLORS.inkMuted,
+    color: C.inkMuted,
     letterSpacing: 1.2,
     marginBottom: 10,
   },
@@ -590,13 +574,13 @@ const styles = StyleSheet.create({
     fontFamily: MONO_FONT,
     fontSize: 14,
     fontWeight: "700",
-    color: COLORS.inkMuted,
+    color: C.inkMuted,
     width: 28,
   },
   itemName: {
     fontFamily: MONO_FONT,
     fontSize: 14,
-    color: COLORS.ink,
+    color: C.ink,
     flex: 1,
     paddingRight: 12,
   },
@@ -604,9 +588,9 @@ const styles = StyleSheet.create({
     fontFamily: MONO_FONT,
     fontSize: 14,
     fontWeight: "600",
-    color: COLORS.ink,
+    color: C.ink,
   },
-  emptyText: { fontSize: 14, color: COLORS.inkMuted, fontStyle: "italic" },
+  emptyText: { fontSize: 14, color: C.inkMuted, fontStyle: "italic" },
 
   totalsBlock: { marginTop: 4 },
   totalRow: {
@@ -614,8 +598,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
-  totalLabel: { fontSize: 15, fontWeight: "600", color: COLORS.inkMuted },
-  totalAmount: { fontSize: 24, fontWeight: "800", color: COLORS.ink },
+  totalLabel: { fontSize: 15, fontWeight: "600", color: C.inkMuted },
+  totalAmount: { fontSize: 24, fontWeight: "800", color: C.ink },
 
   paymentRow: {
     flexDirection: "row",
@@ -629,7 +613,7 @@ const styles = StyleSheet.create({
   ticketId: {
     fontFamily: MONO_FONT,
     fontSize: 11,
-    color: COLORS.inkMuted,
+    color: C.inkMuted,
     textAlign: "center",
     letterSpacing: 1,
     marginTop: 18,
@@ -640,8 +624,8 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: Platform.OS === "ios" ? 8 : 16,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: COLORS.cardBorder,
-    backgroundColor: COLORS.paper,
+    borderTopColor: C.cardBorder,
+    backgroundColor: C.paper,
   },
   footerNote: {
     flexDirection: "row",
@@ -649,5 +633,5 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
   },
-  footerNoteText: { fontSize: 14, fontWeight: "600", color: COLORS.inkMuted },
+  footerNoteText: { fontSize: 14, fontWeight: "600", color: C.inkMuted },
 });

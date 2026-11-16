@@ -1,94 +1,36 @@
-import { Ionicons } from "@react-native-vector-icons/ionicons";
+import type { IoniconsIconName } from "@react-native-vector-icons/ionicons";
 
-export type OrderStatusKey = "not-taken" | "served" | "payment" | "completed";
+import type { OrderTab } from "@/types";
+
+import { C } from "./theme";
 
 export interface StatusMeta {
-  /** Label shown on an individual order's status badge (its own state). */
+  /** What an order in this state is called on its badge. */
   label: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  /** Vivid color — ticket stub on cards, active pill in the tab bar. */
-  accent: string;
-  /** Pale tint — background of the in-card status badge. */
-  pale: string;
-  /** Dark "ink" version of the accent — text/icon color on top of `pale`. */
+  icon: IoniconsIconName;
+  /** Text and icon colour on top of `pale`. */
   ink: string;
+  /** Background of the badge. */
+  pale: string;
 }
 
-const STATUS_META: Record<OrderStatusKey, StatusMeta> = {
-  "not-taken": {
-    label: "Placed",
-    icon: "hourglass-outline",
-    accent: "#F59E0B", // amber — needs action
-    pale: "#FEF3C7",
-    ink: "#B45309",
-  },
-  served: {
-    label: "Served",
-    icon: "restaurant-outline",
-    accent: "#3B82F6", // blue — in progress
-    pale: "#DBEAFE",
-    ink: "#1D4ED8",
-  },
-  payment: {
-    label: "Ready to Pay",
-    icon: "wallet-outline",
-    // Violet on purpose — #0d9488 (brand teal) is already used for buttons/spinners/
-    // actions elsewhere, so reusing it here would make a status look like a tappable action.
-    accent: "#7C3AED",
-    pale: "#EDE9FE",
-    ink: "#5B21B6",
-  },
-  completed: {
-    label: "Completed",
-    icon: "checkmark-circle-outline",
-    accent: "#10B981", // emerald — resolved
-    pale: "#D1FAE5",
-    ink: "#047857",
-  },
+const BY_STATUS: Record<string, StatusMeta> = {
+  placed: { label: "New order", icon: "hourglass-outline", ink: C.amber, pale: C.amberPale },
+  served: { label: "Served", icon: "restaurant-outline", ink: C.blue, pale: C.bluePale },
+  ready_to_pay: { label: "Bill requested", icon: "wallet-outline", ink: C.violet, pale: C.violetPale },
+  completed: { label: "Paid", icon: "checkmark-circle-outline", ink: C.success, pale: C.successPale },
+  cancelled: { label: "Cancelled", icon: "close-circle-outline", ink: C.danger, pale: C.dangerPale },
 };
 
-/** Label shown on the tab bar itself — the queue name, distinct from the order's own state. */
-export const TAB_LABELS: Record<OrderStatusKey, string> = {
-  "not-taken": "Not Taken",
-  served: "Served",
-  payment: "Payment",
-  completed: "Completed",
-};
+const FALLBACK: StatusMeta = { label: "Order", icon: "ellipse-outline", ink: C.inkMuted, pale: "#EFE7D2" };
 
-const FALLBACK_META: StatusMeta = {
-  label: "Order",
-  icon: "ellipse-outline",
-  accent: "#9CA3AF",
-  pale: "#F3F4F6",
-  ink: "#374151",
-};
+/** How an order's own status is shown. */
+export const getStatusMeta = (status: string | undefined): StatusMeta => BY_STATUS[status ?? ""] ?? FALLBACK;
 
-const STATUS_ALIASES: Record<string, OrderStatusKey> = {
-  placed: "not-taken",
-  pending: "not-taken",
-  "ready-to-pay": "payment",
-  "awaiting-payment": "payment",
-  "in-progress": "served",
-  done: "completed",
-};
-
-export function getStatusMeta(status?: string | null): StatusMeta {
-  if (!status) return FALLBACK_META;
-  const key = status
-    .trim()
-    .toLowerCase()
-    .replace(/[\s_]+/g, "-");
-  const canonical = STATUS_ALIASES[key] ?? (key as OrderStatusKey);
-  return STATUS_META[canonical] ?? { ...FALLBACK_META, label: status };
-}
-
-export function getTabLabel(tabStatus: OrderStatusKey): string {
-  return TAB_LABELS[tabStatus] ?? tabStatus;
-}
-
-export const TAB_STATUSES: OrderStatusKey[] = [
-  "not-taken",
-  "served",
-  "payment",
-  "completed",
+/** The queues, in the order a table moves through them. */
+export const TABS: { id: OrderTab; label: string; empty: { icon: IoniconsIconName; title: string; body: string } }[] = [
+  { id: "not-taken", label: "New", empty: { icon: "time-outline", title: "All caught up", body: "New orders will show up here." } },
+  { id: "served", label: "Served", empty: { icon: "restaurant-outline", title: "Nothing at the tables", body: "Orders you have served wait here until the bill is asked for." } },
+  { id: "payment", label: "Payment", empty: { icon: "wallet-outline", title: "No bills waiting", body: "Tables that are ready to pay appear here." } },
+  { id: "completed", label: "Done", empty: { icon: "checkmark-circle-outline", title: "No closed tables yet", body: "Paid orders are listed here." } },
 ];

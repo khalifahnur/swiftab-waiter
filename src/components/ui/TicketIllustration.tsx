@@ -1,11 +1,11 @@
-import { Ionicons } from "@react-native-vector-icons/ionicons";
+import { Ionicons, type IoniconsIconName } from "@react-native-vector-icons/ionicons";
 import { Text, View } from "react-native";
 
 const NOTCH_COUNT = 9;
 const CARD_WIDTH = 220;
 
 interface TicketIllustrationProps {
-  icon: keyof typeof Ionicons.glyphMap;
+  icon: IoniconsIconName;
   accent: string;
   stamp: string;
 }

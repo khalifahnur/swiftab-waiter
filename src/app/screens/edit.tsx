@@ -1,102 +1,89 @@
 import { Ionicons } from "@react-native-vector-icons/ionicons";
 import { router } from "expo-router";
 import { useState } from "react";
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { errorMessage } from "@/api/client";
 import { AuthButton } from "@/components/ui/AuthButton";
 import { AuthInput } from "@/components/ui/AuthInput";
-import { useAuthStore } from "@/store/useAuthStore";
+import { useUpdateProfile } from "@/hooks/queries";
+import { initials } from "@/lib/format";
+import { notify } from "@/lib/toast";
+import { useWaiter } from "@/store/useAuthStore";
 
+/** The name and phone number guests and managers see for this waiter. */
 export default function EditProfile() {
   const insets = useSafeAreaInsets();
-  const waiterObj = useAuthStore((state) => state.waiterData);
-  const waiter = waiterObj?.waiter;
+  const waiter = useWaiter();
+  const update = useUpdateProfile();
 
-  const [firstName, setFirstName] = useState(waiter?.firstname);
-  const [phoneNumber, setPhoneNumber] = useState(waiter?.phoneNumber || "");
-  const [errors, setErrors] = useState<{
-    firstName?: string;
-    phoneNumber?: string;
-  }>({});
+  const [firstName, setFirstName] = useState(waiter?.firstname ?? "");
+  const [lastName, setLastName] = useState(waiter?.lastname ?? "");
+  const [phoneNumber, setPhoneNumber] = useState(waiter?.phoneNumber ?? "");
+  const [errors, setErrors] = useState<{ firstName?: string; phoneNumber?: string }>({});
 
-  const initial = firstName?.charAt(0).toUpperCase() || "W";
+  const changed =
+    firstName.trim() !== (waiter?.firstname ?? "") || lastName.trim() !== (waiter?.lastname ?? "") || phoneNumber.trim() !== (waiter?.phoneNumber ?? "");
 
-  const validate = () => {
-    const next: typeof errors = {};
-    if (!firstName?.trim()) next.firstName = "First name is required";
-    if (!phoneNumber.trim()) next.phoneNumber = "Phone number is required";
-
-    setErrors(next);
-    return Object.keys(next).length === 0;
-  };
+  // Always return to the profile tab, however this screen was reached.
+  const leave = () => router.navigate("/(app)/profile");
 
   const onSave = () => {
-    if (!validate()) return;
-    // updateProfile(
-    //   { firstName: firstName?.trim(), phoneNumber: phoneNumber.trim() },
-    //   { onSuccess: () => router.back() }
-    // );
+    const next: typeof errors = {};
+    if (!firstName.trim()) next.firstName = "First name is required";
+    if (!/^\+?[\d\s-]{9,16}$/.test(phoneNumber.trim())) next.phoneNumber = "Enter a valid phone number";
+    setErrors(next);
+    if (Object.keys(next).length > 0) return;
+
+    update.mutate(
+      { firstname: firstName.trim(), lastname: lastName.trim(), phoneNumber: phoneNumber.trim() },
+      {
+        onSuccess: () => {
+          notify.success("Profile updated");
+          leave();
+        },
+        onError: (error) => notify.error("Could not save your profile", errorMessage(error)),
+      },
+    );
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      className="flex-1 bg-[#F7F8FA]"
-    >
-      <View
-        style={{ paddingTop: insets.top + 12 }}
-        className="flex-row items-center px-5 pb-4 bg-white border-b border-gray-100"
-      >
+    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1 bg-[#F2E8D6]">
+      <View style={{ paddingTop: insets.top + 12 }} className="flex-row items-center px-5 pb-4">
         <Pressable
-          onPress={() => router.back()}
-          className="h-10 w-10 items-center justify-center rounded-full bg-gray-50 active:bg-gray-100"
+          onPress={leave}
+          className="h-10 w-10 items-center justify-center rounded-full bg-white/60"
           hitSlop={10}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
         >
-          <Ionicons name="chevron-back" size={22} color="#1F2937" />
+          <Ionicons name="chevron-back" size={22} color="#2B2621" />
         </Pressable>
-        <Text className="ml-4 text-[19px] font-bold text-gray-900 tracking-tight">
-          Edit Profile
+        <Text className="ml-4 text-[19px] font-bold tracking-tight" style={{ color: "#2B2621" }}>
+          Edit profile
         </Text>
       </View>
 
-      <ScrollView
-        contentContainerStyle={{ padding: 24 }}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View className="mb-10 items-center mt-2">
-          <View>
-            <View className="w-24 h-24 bg-teal-100 rounded-full border-4 border-white shadow-sm items-center justify-center">
-              <Text className="text-teal-700 text-[36px] font-black">
-                {initial}
-              </Text>
-            </View>
-            <Pressable className="absolute bottom-0 right-0 h-9 w-9 items-center justify-center rounded-full bg-[#008080] border-[3px] border-[#F7F8FA]">
-              <Ionicons name="camera" size={16} color="#fff" />
-            </Pressable>
+      <ScrollView contentContainerStyle={{ padding: 24 }} keyboardShouldPersistTaps="handled">
+        <View className="mb-8 items-center">
+          <View className="h-24 w-24 items-center justify-center rounded-full" style={{ backgroundColor: "#DCEEE8", borderWidth: 4, borderColor: "#FBF6EA" }}>
+            <Text className="text-[34px] font-black" style={{ color: "#006361" }}>
+              {initials(firstName, lastName)}
+            </Text>
           </View>
+          {!!waiter?.email && (
+            <Text className="mt-3 text-[13px]" style={{ color: "#8C8171" }}>
+              {waiter.email}
+            </Text>
+          )}
         </View>
 
-        {/* Inputs */}
+        <AuthInput testID="edit-first-name" label="First name" leftIcon="person-outline" autoCapitalize="words" value={firstName} onChangeText={setFirstName} error={errors.firstName} />
+        <AuthInput testID="edit-last-name" label="Last name" leftIcon="person-outline" autoCapitalize="words" value={lastName} onChangeText={setLastName} />
         <AuthInput
-          label="First Name"
-          leftIcon="person-outline"
-          value={firstName}
-          onChangeText={setFirstName}
-          error={errors.firstName}
-        />
-
-        <View className="mt-2" />
-
-        <AuthInput
-          label="Phone Number"
+          testID="edit-phone"
+          label="Phone number"
           leftIcon="call-outline"
           keyboardType="phone-pad"
           value={phoneNumber}
@@ -104,8 +91,8 @@ export default function EditProfile() {
           error={errors.phoneNumber}
         />
 
-        <View className="mt-8">
-          <AuthButton label="Save Changes" onPress={onSave} />
+        <View className="mt-6">
+          <AuthButton testID="edit-save" label="Save changes" onPress={onSave} loading={update.isPending} disabled={!changed} />
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

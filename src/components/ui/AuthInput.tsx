@@ -1,4 +1,4 @@
-import { Ionicons } from "@react-native-vector-icons/ionicons";
+import { Ionicons, type IoniconsIconName } from "@react-native-vector-icons/ionicons";
 import { useState } from "react";
 import { Pressable, Text, TextInput, TextInputProps, View } from "react-native";
 
@@ -6,7 +6,7 @@ interface AuthInputProps extends TextInputProps {
   label: string;
   error?: string;
   secure?: boolean;
-  leftIcon?: keyof typeof Ionicons.glyphMap;
+  leftIcon?: IoniconsIconName;
 }
 
 const INK = "#1C1C1E";

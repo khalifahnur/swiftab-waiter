@@ -1,4 +1,4 @@
-import { Ionicons } from "@react-native-vector-icons/ionicons";
+import { Ionicons, type IoniconsIconName } from "@react-native-vector-icons/ionicons";
 import { StyleSheet, Text, View } from "react-native";
 import { BaseToastProps } from "react-native-toast-message";
 
@@ -6,7 +6,7 @@ type Tone = "success" | "error";
 
 const TONES: Record<
   Tone,
-  { icon: keyof typeof Ionicons.glyphMap; fg: string; bg: string }
+  { icon: IoniconsIconName; fg: string; bg: string }
 > = {
   success: { icon: "checkmark-circle", fg: "#0F9D58", bg: "#E7F8EF" },
   error: { icon: "close-circle", fg: "#E0393E", bg: "#FDEAEA" },

@@ -1,65 +1,27 @@
 /**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
+ * Colours for the waiter app: warm paper surfaces with Swiftab teal, like a
+ * kitchen ticket. Screens read from here so they stay consistent.
  */
-
-import '@/global.css';
-
-import { Platform } from 'react-native';
-
-export const Colors = {
-  light: {
-    text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
-    backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
-  },
-  dark: {
-    text: '#ffffff',
-    background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
-  },
+export const C = {
+  paper: "#F2E8D6",
+  card: "#FBF6EA",
+  cardBorder: "#E7DAB8",
+  divider: "#DED0AC",
+  ink: "#2B2621",
+  inkMuted: "#8C8171",
+  skeleton: "#E9DFC5",
+  accent: "#008080",
+  accentDeep: "#006361",
+  accentPale: "#DCEEE8",
+  white: "#FFFFFF",
+  danger: "#B0413E",
+  dangerPale: "#FAE3DF",
+  success: "#3F7D45",
+  successPale: "#E4F0DE",
+  amber: "#B4530F",
+  amberPale: "#FBE9CE",
+  violet: "#5B21B6",
+  violetPale: "#EDE9FE",
+  blue: "#1D4ED8",
+  bluePale: "#DBEAFE",
 } as const;
-
-export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
-
-export const Fonts = Platform.select({
-  ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
-    serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
-    rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
-    mono: 'ui-monospace',
-  },
-  default: {
-    sans: 'normal',
-    serif: 'serif',
-    rounded: 'normal',
-    mono: 'monospace',
-  },
-  web: {
-    sans: 'var(--font-display)',
-    serif: 'var(--font-serif)',
-    rounded: 'var(--font-rounded)',
-    mono: 'var(--font-mono)',
-  },
-});
-
-export const Spacing = {
-  half: 2,
-  one: 4,
-  two: 8,
-  three: 16,
-  four: 24,
-  five: 32,
-  six: 64,
-} as const;
-
-export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
-export const MaxContentWidth = 800;

@@ -1,9 +1,9 @@
-import { Ionicons } from "@react-native-vector-icons/ionicons";
-import * as Haptics from "expo-haptics";
+import { Ionicons, type IoniconsIconName } from "@react-native-vector-icons/ionicons";
+import { feedback } from "@/lib/feedback";
 import { Pressable, Switch, Text, View } from "react-native";
 
 interface SettingsRowProps {
-  icon: keyof typeof Ionicons.glyphMap;
+  icon: IoniconsIconName;
   iconColor?: string;
   iconBg?: string;
   label: string;
@@ -17,8 +17,8 @@ interface SettingsRowProps {
 
 export function SettingsRow({
   icon,
-  iconColor = "#0A84FF",
-  iconBg = "#EAF3FF",
+  iconColor = "#008080",
+  iconBg = "#DCEEE8",
   label,
   value,
   onPress,
@@ -57,10 +57,10 @@ export function SettingsRow({
         <Switch
           value={switchValue}
           onValueChange={(v) => {
-            Haptics.selectionAsync();
+            feedback.tap();
             onSwitchChange?.(v);
           }}
-          trackColor={{ false: "#E5E5EA", true: "#0A84FF" }}
+          trackColor={{ false: "#E5E5EA", true: "#008080" }}
         />
       ) : (
         <>
@@ -80,7 +80,7 @@ export function SettingsRow({
   return (
     <Pressable
       onPress={() => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        feedback.tap();
         onPress();
       }}
     >

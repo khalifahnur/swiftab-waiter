@@ -1,28 +1,88 @@
+import { focusManager, QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
+import { Slot, useRouter } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
+import { StatusBar } from "expo-status-bar";
+import { useEffect, useState } from "react";
+import { AppState, Platform } from "react-native";
+import Toast from "react-native-toast-message";
+
+import { setSessionExpiredHandler } from "@/api/client";
 import { AnimatedSplashOverlay } from "@/components/animated-icon";
 import { toastConfig } from "@/components/ui/CustomToast";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import * as SplashScreen from "expo-splash-screen";
+import { feedback } from "@/lib/feedback";
+import { listenForNotifications, registerForPush } from "@/lib/notifications";
+import { notify } from "@/lib/toast";
+import { useAuthStore } from "@/store/useAuthStore";
+import { usePrefs } from "@/store/usePrefs";
 
-import { Slot } from "expo-router";
-import { StatusBar } from "react-native";
-import Toast from "react-native-toast-message";
 import "../global.css";
 
-const queryClient = new QueryClient();
+SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
-SplashScreen.preventAutoHideAsync();
+// Refresh the queues when the app comes back to the foreground.
+focusManager.setEventListener((setFocused) => {
+  const subscription = AppState.addEventListener("change", (state) => {
+    if (Platform.OS !== "web") setFocused(state === "active");
+  });
+  return () => subscription.remove();
+});
+
+/** Push registration and notification handling for a signed-in waiter. */
+function SignedInServices() {
+  const router = useRouter();
+  const client = useQueryClient();
+  const waiterId = useAuthStore((s) => s.session?.waiter?._id);
+  const pushEnabled = usePrefs((s) => s.pushEnabled);
+
+  useEffect(() => {
+    if (waiterId && pushEnabled) registerForPush(waiterId);
+  }, [waiterId, pushEnabled]);
+
+  useEffect(() => {
+    const refresh = () => {
+      client.invalidateQueries({ queryKey: ["orders"] });
+      client.invalidateQueries({ queryKey: ["summary"] });
+      client.invalidateQueries({ queryKey: ["floor"] });
+    };
+    return listenForNotifications({
+      onReceive: () => {
+        feedback.warning();
+        refresh();
+      },
+      onOpen: () => {
+        refresh();
+        router.navigate("/(app)");
+      },
+    });
+  }, [client, router]);
+
+  return null;
+}
 
 export default function RootLayout() {
+  const [client] = useState(
+    () => new QueryClient({ defaultOptions: { queries: { retry: 1, gcTime: 10 * 60 * 1000 }, mutations: { retry: 0 } } }),
+  );
+  const signedIn = useAuthStore((s) => Boolean(s.session));
+
+  // When the API no longer accepts the session, return to sign-in once.
+  useEffect(() => {
+    setSessionExpiredHandler(() => {
+      if (!useAuthStore.getState().session) return;
+      useAuthStore.getState().signOut();
+      client.clear();
+      notify.error("Your session has ended", "Please sign in again.");
+    });
+    return () => setSessionExpiredHandler(null);
+  }, [client]);
+
   return (
-    <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={client}>
       <AnimatedSplashOverlay />
       <Slot />
-      <StatusBar
-        barStyle="light-content"
-        translucent={false}
-        backgroundColor="#008080"
-      />
-      <Toast config={toastConfig} />
+      {signedIn && <SignedInServices />}
+      <StatusBar style="light" />
+      <Toast config={toastConfig} topOffset={56} />
     </QueryClientProvider>
   );
 }

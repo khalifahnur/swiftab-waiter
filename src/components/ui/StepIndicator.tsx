@@ -4,7 +4,7 @@ import { Text, View } from "react-native";
 const ACTIVE = "#008080";
 const INACTIVE = "#E5E5EA";
 
-const STEP_LABELS = ["Restaurant", "Password"];
+const STEP_LABELS = ["Invite", "Password"];
 
 export function StepIndicator({ step }: { step: 1 | 2 }) {
   return (
