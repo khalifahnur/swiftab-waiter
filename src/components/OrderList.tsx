@@ -1,162 +1,46 @@
-import OrderDetailView, { type Order } from "@/components/OrderDetails";
-import { getStatusMeta } from "@/constants/orderStatus";
-import { useWaiterOrders } from "@/hooks/apihook/orderHook";
 import Ionicons from "@react-native-vector-icons/ionicons";
-import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  Animated,
-  Dimensions,
-  Easing,
-  FlatList,
-  Modal,
-  Platform,
-  Pressable,
-  RefreshControl,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Animated, Dimensions, Easing, FlatList, Modal, Platform, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
 
-interface OrderListProps {
-  restaurantId?: string;
-  tabStatus: string;
-  onPressOrder?: (order: Order) => void;
-  onTabChange?: (tab: string) => void;
-}
-
-const COLORS = {
-  paper: "#F2E8D6",
-  card: "#FBF6EA",
-  cardBorder: "#E7DAB8",
-  ink: "#2B2621",
-  inkMuted: "#8C8171",
-  skeleton: "#E9DFC5",
-  accent: "#008080",
-};
+import { errorMessage } from "@/api/client";
+import OrderDetailView from "@/components/OrderDetails";
+import { getStatusMeta, TABS } from "@/constants/orderStatus";
+import { C } from "@/constants/theme";
+import { useOrders } from "@/hooks/queries";
+import { feedback } from "@/lib/feedback";
+import { formatKes, paymentLabel, tableLabel, timeAgo, titleCase } from "@/lib/format";
+import type { Order, OrderTab } from "@/types";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
-
-const TABS = [
-  { id: "not-taken", label: "New" },
-  { id: "served", label: "Served" },
-  { id: "payment", label: "Payment" },
-  { id: "completed", label: "Done" },
-];
-
-const EMPTY_COPY: Record<
-  string,
-  { icon: keyof typeof Ionicons.glyphMap; title: string; body: string }
-> = {
-  "not-taken": {
-    icon: "time-outline",
-    title: "All caught up",
-    body: "New orders will show up here.",
-  },
-  served: {
-    icon: "restaurant-outline",
-    title: "Nothing served yet",
-    body: "Orders you've served will land here.",
-  },
-  payment: {
-    icon: "wallet-outline",
-    title: "No bills waiting",
-    body: "Tables ready to pay will appear here.",
-  },
-  completed: {
-    icon: "checkmark-circle-outline",
-    title: "No completed tables",
-    body: "Finished orders will show up here.",
-  },
-};
-
-const currencyFormatter = new Intl.NumberFormat("en-KE");
-const formatCurrency = (amount?: number) =>
-  `Ksh ${currencyFormatter.format(amount ?? 0)}`;
-
-const toTitleCase = (value: string) =>
-  value.replace(
-    /\w\S*/g,
-    (word) => word.charAt(0).toUpperCase() + word.slice(1),
-  );
-
-function getTableDisplay(tableNumber: unknown) {
-  const raw = String(tableNumber ?? "").trim() || "N/A";
-  return raw.replace(/^table\s*/i, "") || raw;
-}
-
-// Fixed a latent bug here: this used to read `item.createdAt`, a field the
-// order documents don't actually have (they use `time`), so the "X ago"
-// label was silently never showing.
-function timeAgo(dateString?: string | null): string | null {
-  if (!dateString) return null;
-  const date = new Date(dateString);
-  if (Number.isNaN(date.getTime())) return null;
-  const minutes = Math.max(
-    0,
-    Math.floor((Date.now() - date.getTime()) / 60000),
-  );
-  if (minutes < 1) return "Just now";
-  if (minutes < 60) return `${minutes}m ago`;
-  return `${Math.floor(minutes / 60)}h ago`;
-}
 
 function SkeletonCard() {
   const sweep = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    const loop = Animated.loop(
-      Animated.timing(sweep, {
-        toValue: 1,
-        duration: 1200,
-        easing: Easing.inOut(Easing.ease),
-        useNativeDriver: true,
-      }),
-    );
+    const loop = Animated.loop(Animated.timing(sweep, { toValue: 1, duration: 1200, easing: Easing.inOut(Easing.ease), useNativeDriver: true }));
     loop.start();
     return () => loop.stop();
   }, [sweep]);
 
-  const translateX = sweep.interpolate({
-    inputRange: [0, 1],
-    outputRange: [-SCREEN_WIDTH, SCREEN_WIDTH],
-  });
+  const translateX = sweep.interpolate({ inputRange: [0, 1], outputRange: [-SCREEN_WIDTH, SCREEN_WIDTH] });
 
   return (
     <View style={styles.card}>
       <View style={styles.cardHeader}>
         <View>
-          <View
-            style={[
-              styles.skeletonBlock,
-              { height: 18, width: 100, marginBottom: 8 },
-            ]}
-          />
+          <View style={[styles.skeletonBlock, { height: 18, width: 100, marginBottom: 8 }]} />
           <View style={[styles.skeletonBlock, { height: 13, width: 70 }]} />
         </View>
-        <View
-          style={[
-            styles.skeletonBlock,
-            { height: 23, width: 64, borderRadius: 8 },
-          ]}
-        />
+        <View style={[styles.skeletonBlock, { height: 23, width: 64, borderRadius: 8 }]} />
       </View>
       <View style={styles.cardFooter}>
         <View style={[styles.skeletonBlock, { height: 13, width: 90 }]} />
         <View style={[styles.skeletonBlock, { height: 18, width: 56 }]} />
       </View>
-      <Animated.View
-        pointerEvents="none"
-        style={[StyleSheet.absoluteFill, { transform: [{ translateX }] }]}
-      >
+      <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { transform: [{ translateX }] }]}>
         <LinearGradient
-          colors={[
-            "rgba(251,246,234,0)",
-            "rgba(251,246,234,0.85)",
-            "rgba(251,246,234,0)",
-          ]}
+          colors={["rgba(251,246,234,0)", "rgba(251,246,234,0.85)", "rgba(251,246,234,0)"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={{ flex: 1 }}
@@ -166,53 +50,39 @@ function SkeletonCard() {
   );
 }
 
-export default function OrderList({
-  restaurantId,
-  tabStatus,
-  onPressOrder,
-}: OrderListProps) {
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const insets = useSafeAreaInsets();
+/** One queue of orders. Refreshes on its own; pull down to refresh now. */
+export default function OrderList({ tab }: { tab: OrderTab }) {
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const { data: orders, isLoading, isError, error, refetch } = useOrders(tab);
 
-  const {
-    data: orders,
-    isLoading,
-    isError,
-    error,
-    refetch,
-  } = useWaiterOrders(restaurantId, tabStatus);
+  // Follow the selected order as the list refreshes; close the sheet when it leaves this queue.
+  const selected = useMemo(() => orders?.find((o) => o._id === selectedId) ?? null, [orders, selectedId]);
 
   const summary = useMemo(() => {
     if (!orders?.length) return null;
-    const total = orders.reduce(
-      (sum: number, o: Order) => sum + (o.totalAmount ?? 0),
-      0,
-    );
-    return { count: orders.length, total };
+    return { count: orders.length, total: orders.reduce((sum, o) => sum + (o.totalAmount ?? 0), 0) };
   }, [orders]);
 
-  if (isError) {
+  const refresh = async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
+  };
+
+  if (isError && !orders) {
     return (
-      <View style={[styles.centerContainer, { paddingTop: insets.top }]}>
-        <Ionicons
-          name="cloud-offline"
-          size={40}
-          color={COLORS.inkMuted}
-          style={{ marginBottom: 12 }}
-        />
-        <Text style={styles.errorTitle}>Couldn't load orders</Text>
-        <Text style={styles.errorBody}>
-          {error?.message ?? "Check your connection and try again."}
-        </Text>
+      <View style={styles.centerContainer}>
+        <Ionicons name="cloud-offline" size={40} color={C.inkMuted} style={{ marginBottom: 12 }} />
+        <Text style={styles.errorTitle}>Could not load orders</Text>
+        <Text style={styles.errorBody}>{errorMessage(error, "Check your connection and try again.")}</Text>
         <Pressable
+          accessibilityRole="button"
           onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            feedback.press();
             refetch();
           }}
-          style={({ pressed }) => [
-            styles.retryButton,
-            { opacity: pressed ? 0.85 : 1 },
-          ]}
+          style={({ pressed }) => [styles.retryButton, { opacity: pressed ? 0.85 : 1 }]}
         >
           <Text style={styles.retryText}>Try again</Text>
         </Pressable>
@@ -220,7 +90,7 @@ export default function OrderList({
     );
   }
 
-  const empty = EMPTY_COPY[tabStatus] ?? EMPTY_COPY["not-taken"];
+  const meta = TABS.find((t) => t.id === tab) ?? TABS[0];
 
   return (
     <View style={styles.container}>
@@ -232,20 +102,11 @@ export default function OrderList({
         </View>
       ) : (
         <FlatList<Order>
-          data={orders}
+          testID={`orders-${tab}`}
+          data={orders ?? []}
           keyExtractor={(item) => item._id}
-          contentContainerStyle={{
-            padding: 16,
-            paddingBottom: 40,
-            flexGrow: 1,
-          }}
-          refreshControl={
-            <RefreshControl
-              refreshing={isLoading}
-              onRefresh={refetch}
-              tintColor={COLORS.accent}
-            />
-          }
+          contentContainerStyle={{ padding: 16, paddingBottom: 40, flexGrow: 1 }}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={C.accent} colors={[C.accent]} />}
           ListHeaderComponent={
             summary ? (
               <View style={styles.summaryBox}>
@@ -253,58 +114,53 @@ export default function OrderList({
                   <Text style={styles.summaryCount}>
                     {summary.count} {summary.count === 1 ? "order" : "orders"}
                   </Text>
-                  <Text style={styles.summaryLabel}>
-                    {TABS.find((t) => t.id === tabStatus)?.label ?? "Orders"}
-                  </Text>
+                  <Text style={styles.summaryLabel}>{meta.label}</Text>
                 </View>
-                <Text style={styles.summaryTotal}>
-                  {formatCurrency(summary.total)}
-                </Text>
+                <Text style={styles.summaryTotal}>{formatKes(summary.total)}</Text>
               </View>
             ) : null
           }
           renderItem={({ item }) => {
-            const meta = getStatusMeta(item.status ?? tabStatus);
+            const status = getStatusMeta(item.status);
             const ago = timeAgo(item.time);
-            const tableDisplay = getTableDisplay(item.tableNumber);
-            const customerName = item.userId?.name
-              ? toTitleCase(item.userId.name)
-              : "Walk-in";
-            const itemCount = item.items?.length || 0;
+            const customer = item.userId?.name ? titleCase(item.userId.name) : "Walk-in";
+            const guests = item.guests ?? 0;
+            const itemCount = item.items.reduce((sum, line) => sum + (line.quantity || 1), 0);
+            const paidWith = paymentLabel(item.paymentMethod);
 
             return (
               <Pressable
+                testID={`order-${item._id}`}
+                accessibilityRole="button"
+                accessibilityLabel={`Table ${tableLabel(item.tableNumber)}, ${status.label}, ${formatKes(item.totalAmount)}`}
                 onPress={() => {
-                  Haptics.selectionAsync();
-                  setSelectedOrder(item);
-                  onPressOrder?.(item);
+                  feedback.tap();
+                  setSelectedId(item._id);
                 }}
-                style={({ pressed }) => [
-                  styles.card,
-                  {
-                    borderLeftColor: meta.ink,
-                    transform: [{ scale: pressed ? 0.97 : 1 }],
-                  },
-                ]}
+                style={({ pressed }) => [styles.card, { borderLeftColor: status.ink, transform: [{ scale: pressed ? 0.98 : 1 }] }]}
               >
                 <View style={styles.cardHeader}>
-                  <View>
-                    <Text style={styles.tableText}>Table {tableDisplay}</Text>
-                    <Text style={styles.metaText}>
-                      {customerName} · {item.guests}{" "}
-                      {item.guests === 1 ? "Guest" : "Guests"}
+                  <View style={{ flex: 1, paddingRight: 10 }}>
+                    <Text style={styles.tableText}>Table {tableLabel(item.tableNumber)}</Text>
+                    <Text style={styles.metaText} numberOfLines={1}>
+                      {customer}
+                      {guests > 0 ? ` · ${guests} ${guests === 1 ? "guest" : "guests"}` : ""}
                     </Text>
                   </View>
-                  <View
-                    style={[styles.statusBadge, { backgroundColor: meta.pale }]}
-                  >
-                    <Ionicons name={meta.icon} size={11} color={meta.ink} />
-                    <Text style={[styles.statusText, { color: meta.ink }]}>
-                      {meta.label}-{" "}
-                      {tabStatus == "payment" && item.paymentMethod}
-                    </Text>
+                  <View style={[styles.statusBadge, { backgroundColor: status.pale }]}>
+                    <Ionicons name={status.icon} size={11} color={status.ink} />
+                    <Text style={[styles.statusText, { color: status.ink }]}>{status.label}</Text>
                   </View>
                 </View>
+
+                {!!paidWith && (
+                  <View style={payStyles.row}>
+                    <Ionicons name="wallet-outline" size={13} color={C.inkMuted} />
+                    <Text style={payStyles.text}>
+                      {item.status === "completed" ? "Paid with" : "Paying with"} {paidWith}
+                    </Text>
+                  </View>
+                )}
 
                 <View style={styles.cardFooter}>
                   <Text style={styles.footerText}>
@@ -312,14 +168,8 @@ export default function OrderList({
                     {ago ? ` · ${ago}` : ""}
                   </Text>
                   <View style={styles.footerRight}>
-                    <Text style={styles.priceText}>
-                      {formatCurrency(item.totalAmount)}
-                    </Text>
-                    <Ionicons
-                      name="chevron-forward"
-                      size={16}
-                      color={COLORS.inkMuted}
-                    />
+                    <Text style={styles.priceText}>{formatKes(item.totalAmount)}</Text>
+                    <Ionicons name="chevron-forward" size={16} color={C.inkMuted} />
                   </View>
                 </View>
               </Pressable>
@@ -328,40 +178,40 @@ export default function OrderList({
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <View style={styles.emptyIconWrapper}>
-                <Ionicons name={empty.icon} size={32} color={COLORS.inkMuted} />
+                <Ionicons name={meta.empty.icon} size={32} color={C.inkMuted} />
               </View>
-              <Text style={styles.emptyTitle}>{empty.title}</Text>
-              <Text style={styles.emptyBody}>{empty.body}</Text>
+              <Text style={styles.emptyTitle}>{meta.empty.title}</Text>
+              <Text style={styles.emptyBody}>{meta.empty.body}</Text>
             </View>
           }
         />
       )}
 
       <Modal
-        visible={!!selectedOrder}
+        visible={Boolean(selected)}
         animationType="slide"
-        transparent={Platform.OS === "android"}
+        transparent={Platform.OS !== "ios"}
         presentationStyle={Platform.OS === "ios" ? "pageSheet" : undefined}
-        onRequestClose={() => setSelectedOrder(null)}
+        onRequestClose={() => setSelectedId(null)}
       >
-        {selectedOrder && (
-          <OrderDetailView
-            order={selectedOrder}
-            onClose={() => setSelectedOrder(null)}
-          />
-        )}
+        {selected && <OrderDetailView order={selected} onClose={() => setSelectedId(null)} />}
       </Modal>
     </View>
   );
 }
 
+const payStyles = StyleSheet.create({
+  row: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 10 },
+  text: { fontSize: 13, fontWeight: "600", color: C.inkMuted },
+});
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.paper },
+  container: { flex: 1, backgroundColor: C.paper },
   centerContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: COLORS.paper,
+    backgroundColor: C.paper,
     padding: 24,
   },
 
@@ -369,18 +219,18 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: COLORS.card,
+    backgroundColor: C.card,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: COLORS.cardBorder,
+    borderColor: C.cardBorder,
     padding: 16,
     marginBottom: 16,
   },
-  summaryCount: { fontSize: 17, fontWeight: "700", color: COLORS.ink },
+  summaryCount: { fontSize: 17, fontWeight: "700", color: C.ink },
   summaryLabel: {
     fontSize: 12,
     fontWeight: "700",
-    color: COLORS.inkMuted,
+    color: C.inkMuted,
     marginTop: 2,
     textTransform: "uppercase",
     letterSpacing: 0.8,
@@ -388,15 +238,15 @@ const styles = StyleSheet.create({
   summaryTotal: {
     fontSize: 20,
     fontWeight: "800",
-    color: COLORS.ink,
+    color: C.ink,
     fontVariant: ["tabular-nums"],
   },
 
   card: {
-    backgroundColor: COLORS.card,
+    backgroundColor: C.card,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: COLORS.cardBorder,
+    borderColor: C.cardBorder,
     borderLeftWidth: 4,
     marginBottom: 14,
     overflow: "hidden",
@@ -416,10 +266,10 @@ const styles = StyleSheet.create({
   tableText: {
     fontSize: 19,
     fontWeight: "700",
-    color: COLORS.ink,
+    color: C.ink,
     marginBottom: 3,
   },
-  metaText: { fontSize: 14, color: COLORS.inkMuted, fontWeight: "500" },
+  metaText: { fontSize: 14, color: C.inkMuted, fontWeight: "500" },
   statusBadge: {
     flexDirection: "row",
     alignItems: "center",
@@ -442,18 +292,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: COLORS.cardBorder,
+    borderTopColor: C.cardBorder,
   },
-  footerText: { fontSize: 13, color: COLORS.inkMuted, fontWeight: "500" },
+  footerText: { fontSize: 13, color: C.inkMuted, fontWeight: "500" },
   footerRight: { flexDirection: "row", alignItems: "center", gap: 4 },
   priceText: {
     fontSize: 16,
     fontWeight: "700",
-    color: COLORS.ink,
+    color: C.ink,
     fontVariant: ["tabular-nums"],
   },
 
-  skeletonBlock: { backgroundColor: COLORS.skeleton, borderRadius: 6 },
+  skeletonBlock: { backgroundColor: C.skeleton, borderRadius: 6 },
 
   emptyContainer: {
     flex: 1,
@@ -465,9 +315,9 @@ const styles = StyleSheet.create({
     width: 68,
     height: 68,
     borderRadius: 34,
-    backgroundColor: COLORS.card,
+    backgroundColor: C.card,
     borderWidth: 1,
-    borderColor: COLORS.cardBorder,
+    borderColor: C.cardBorder,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 16,
@@ -475,12 +325,12 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: COLORS.ink,
+    color: C.ink,
     marginBottom: 6,
   },
   emptyBody: {
     fontSize: 14,
-    color: COLORS.inkMuted,
+    color: C.inkMuted,
     textAlign: "center",
     maxWidth: 260,
     lineHeight: 20,
@@ -489,18 +339,18 @@ const styles = StyleSheet.create({
   errorTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: COLORS.ink,
+    color: C.ink,
     marginBottom: 8,
   },
   errorBody: {
     fontSize: 14,
-    color: COLORS.inkMuted,
+    color: C.inkMuted,
     textAlign: "center",
     marginBottom: 24,
     lineHeight: 20,
   },
   retryButton: {
-    backgroundColor: COLORS.accent,
+    backgroundColor: C.accent,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 12,

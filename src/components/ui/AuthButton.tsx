@@ -1,4 +1,4 @@
-import * as Haptics from "expo-haptics";
+import { feedback } from "@/lib/feedback";
 import {
   ActivityIndicator,
   GestureResponderEvent,
@@ -12,6 +12,7 @@ interface AuthButtonProps {
   loading?: boolean;
   disabled?: boolean;
   variant?: "primary" | "dark" | "ghost";
+  testID?: string;
 }
 
 const VARIANT_BG: Record<NonNullable<AuthButtonProps["variant"]>, string> = {
@@ -26,18 +27,23 @@ export function AuthButton({
   loading,
   disabled,
   variant = "primary",
+  testID,
 }: AuthButtonProps) {
   const isGhost = variant === "ghost";
   const isDisabled = disabled || loading;
   const bg = VARIANT_BG[variant];
 
   const handlePress = (e: GestureResponderEvent) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    feedback.press();
     onPress(e);
   };
 
   return (
     <Pressable
+      testID={testID}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ disabled: Boolean(isDisabled), busy: Boolean(loading) }}
       onPress={handlePress}
       disabled={isDisabled}
       className="h-[52px] items-center justify-center rounded-xl"

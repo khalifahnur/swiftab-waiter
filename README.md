@@ -1,56 +1,69 @@
-# Welcome to your Expo app 👋
+# Swiftab Waiter
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+The Swiftab app for floor staff: see new orders the moment they are placed,
+serve them, take payment and close the table. Built with Expo (SDK 57) and
+Expo Router.
 
-## Get started
+It talks to the Swiftab API (`swiftab-server`) — the same API the restaurant
+dashboard and the diner app use, so an order placed in the diner app appears
+here and its payment shows up on the dashboard.
 
-1. Install dependencies
+> This project is on Expo SDK 57. Read the versioned docs at
+> https://docs.expo.dev/versions/v57.0.0/ before changing native APIs
+> (see `AGENTS.md`).
 
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Run it
 
 ```bash
-npm run reset-project
+npm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+```bash
+npx expo start
+```
 
-### Other setup steps
+Push notifications need a development or production build; they do not work
+in Expo Go on Android.
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+### Configuration
 
-## Learn more
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `EXPO_PUBLIC_API_URL` | `https://api.swiftab.co.ke/api/v2` | Where the API lives. Point it at a local server while developing. |
 
-To learn more about developing your project with Expo, look at the following resources:
+Copy `.env.example` to `.env` to change it.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Check
 
-## Join the community
+```bash
+npm run typecheck
+```
 
-Join our community of developers creating universal apps.
+## How a waiter gets in
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+1. A manager adds the waiter in the dashboard (Settings → Staff), which
+   creates a six-digit invite code.
+2. In the app the waiter chooses **Set up your account**, enters their email
+   and the code, then picks a password.
+3. A forgotten password is reset by the manager from the same place; the
+   waiter gets a new code.
+
+## What is in the app
+
+| Screen | What it does |
+| --- | --- |
+| **Orders** | Four queues — New, Served, Payment, Done — with live counts. The open queues refresh every few seconds; a new order raises a toast and a vibration. Today's tables served, tables closed and sales sit in the header, with a one-tap on/off duty switch. |
+| **Order ticket** | Items with guest notes, the guest's name and phone. *Accept & serve* claims the order; *Cancel order* tells the guest; *Take payment* records how the bill was paid (M-Pesa, cash, card or Airtel Money) and an optional transaction code, then closes the table. Paid orders can be shared as a receipt. |
+| **Floor** | Every floor as the manager drew it in the dashboard — each table at its position, size and angle with its chairs — coloured free, reserved or occupied. Tap a table to see who is there and until when. |
+| **Profile** | Clock in and out, today's numbers, edit name and phone, switch order alerts and vibration on or off, help, sign out. |
+
+## How it is organised
+
+| Path | What lives there |
+| --- | --- |
+| `src/app/` | Screens (file-based routes): `(auth)` sign-in and invite, `(app)` the three tabs, `screens/` pages opened from the profile. |
+| `src/api/` | `client.ts` (base URL, session token, readable errors) and `api.ts` (one function per endpoint). |
+| `src/hooks/queries.ts` | All data fetching and writes, with cache keys in one place. |
+| `src/lib/` | Notifications, formatting, haptics, and `floor.ts` — the chair layout rules shared with the dashboard and the diner app. |
+| `src/store/` | The session (kept in the device keychain) and preferences. |
+| `src/constants/` | Colours and order-status labels. |
