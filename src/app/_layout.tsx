@@ -7,7 +7,7 @@ import { AppState, Platform } from "react-native";
 import Toast from "react-native-toast-message";
 
 import { setSessionExpiredHandler } from "@/api/client";
-import { AnimatedSplashOverlay } from "@/components/animated-icon";
+import AnimatedSplash from "@/components/AnimatedSplash";
 import { toastConfig } from "@/components/ui/CustomToast";
 import { feedback } from "@/lib/feedback";
 import { listenForNotifications, registerForPush } from "@/lib/notifications";
@@ -64,6 +64,7 @@ export default function RootLayout() {
     () => new QueryClient({ defaultOptions: { queries: { retry: 1, gcTime: 10 * 60 * 1000 }, mutations: { retry: 0 } } }),
   );
   const signedIn = useAuthStore((s) => Boolean(s.session));
+  const hydrated = useAuthStore((s) => s.hydrated);
 
   // When the API no longer accepts the session, return to sign-in once.
   useEffect(() => {
@@ -78,11 +79,12 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={client}>
-      <AnimatedSplashOverlay />
       <Slot />
       {signedIn && <SignedInServices />}
       <StatusBar style="light" />
       <Toast config={toastConfig} topOffset={56} />
+      {/* Hides the system splash itself, then animates away once the session has been read. */}
+      <AnimatedSplash ready={hydrated} />
     </QueryClientProvider>
   );
 }

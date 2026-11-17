@@ -56,11 +56,33 @@ export async function removePushToken(waiterId: string, token: string): Promise<
 
 // --- Orders ------------------------------------------------------------------
 
+/**
+ * Makes an order safe to render. The API sends the serving waiter as an
+ * object ({ firstname, lastname }); showing that as text crashes the app, so
+ * it is reduced to a name here, and missing lists become empty ones.
+ */
+function normalizeOrder(raw: any): Order {
+  const waiter = raw?.waiter;
+  const waiterName =
+    typeof waiter === "string" ? waiter : waiter ? [waiter.firstname, waiter.lastname].filter(Boolean).join(" ") : "";
+  const guest = raw?.userId;
+  return {
+    ...raw,
+    items: Array.isArray(raw?.items) ? raw.items : [],
+    totalAmount: Number(raw?.totalAmount) || 0,
+    tableNumber: String(raw?.tableNumber ?? ""),
+    waiter: waiterName,
+    servedBy: typeof raw?.servedBy === "string" ? raw.servedBy : (raw?.servedBy?._id ?? null),
+    userId: guest && typeof guest === "object" ? { _id: String(guest._id ?? ""), name: String(guest.name ?? ""), phoneNumber: guest.phoneNumber } : null,
+    paymentMethod: typeof raw?.paymentMethod === "string" ? raw.paymentMethod : "",
+  };
+}
+
 export async function fetchOrders(restaurantId: string, tab: OrderTab): Promise<Order[]> {
   const res = await api.get<{ data: Order[] | null }>(`/waiters/restaurants/${restaurantId}/orders`, {
     params: { tab },
   });
-  return (res.data.data ?? []).map((order) => ({ ...order, items: order.items ?? [] }));
+  return (res.data.data ?? []).map(normalizeOrder);
 }
 
 /** Claims an order for this waiter and marks it served. */

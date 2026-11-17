@@ -17,7 +17,7 @@ export function StepIndicator({ step }: { step: 1 | 2 }) {
               style={{ backgroundColor: step >= s ? ACTIVE : INACTIVE }}
             >
               <Text
-                className="text-[13px] font-semibold"
+                className="text-[11.5px] font-semibold"
                 style={{ color: step >= s ? "#fff" : "#9A9AA0" }}
               >
                 {s}

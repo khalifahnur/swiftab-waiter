@@ -1,4 +1,4 @@
-import { Ionicons } from "@react-native-vector-icons/ionicons";
+import { Icon, type IconName } from "@/components/ui/Icon";
 import { router } from "expo-router";
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from "react-native";
@@ -58,9 +58,9 @@ export default function EditProfile() {
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <Ionicons name="chevron-back" size={22} color="#2B2621" />
+          <Icon name="chevron-back" size={22} color="#2B2621" />
         </Pressable>
-        <Text className="ml-4 text-[19px] font-bold tracking-tight" style={{ color: "#2B2621" }}>
+        <Text className="ml-4 text-[17px] font-bold tracking-tight" style={{ color: "#2B2621" }}>
           Edit profile
         </Text>
       </View>
@@ -68,12 +68,12 @@ export default function EditProfile() {
       <ScrollView contentContainerStyle={{ padding: 24 }} keyboardShouldPersistTaps="handled">
         <View className="mb-8 items-center">
           <View className="h-24 w-24 items-center justify-center rounded-full" style={{ backgroundColor: "#DCEEE8", borderWidth: 4, borderColor: "#FBF6EA" }}>
-            <Text className="text-[34px] font-black" style={{ color: "#006361" }}>
+            <Text className="text-[30.5px] font-black" style={{ color: "#006361" }}>
               {initials(firstName, lastName)}
             </Text>
           </View>
           {!!waiter?.email && (
-            <Text className="mt-3 text-[13px]" style={{ color: "#8C8171" }}>
+            <Text className="mt-3 text-[11.5px]" style={{ color: "#8C8171" }}>
               {waiter.email}
             </Text>
           )}

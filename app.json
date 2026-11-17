@@ -7,9 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "swiftabwaiter",
     "userInterfaceStyle": "light",
-    "ios": {
-      "icon": "./assets/expo.icon"
-    },
+    "ios": {},
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#008080",
@@ -28,9 +26,13 @@
       [
         "expo-splash-screen",
         {
+          "image": "./assets/images/adaptive-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
           "backgroundColor": "#008080",
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "dark": {
+            "backgroundColor": "#008080"
+          }
         }
       ],
       "expo-status-bar",

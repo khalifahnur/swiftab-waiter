@@ -1,4 +1,4 @@
-import { Ionicons } from "@react-native-vector-icons/ionicons";
+import { Icon, type IconName } from "@/components/ui/Icon";
 import { useQueryClient } from "@tanstack/react-query";
 import Constants from "expo-constants";
 import { router } from "expo-router";
@@ -20,7 +20,7 @@ import { usePrefs } from "@/store/usePrefs";
 function Stat({ value, label }: { value: string; label: string }) {
   return (
     <View className="flex-1 items-center">
-      <Text className="text-[18px] font-extrabold" style={{ color: "#2B2621", fontVariant: ["tabular-nums"] }} numberOfLines={1}>
+      <Text className="text-[16px] font-extrabold" style={{ color: "#2B2621", fontVariant: ["tabular-nums"] }} numberOfLines={1}>
         {value}
       </Text>
       <Text className="mt-0.5 text-[11px] font-semibold uppercase" style={{ color: "#8C8171", letterSpacing: 0.5 }}>
@@ -81,15 +81,15 @@ export default function Profile() {
         >
           <Avatar name={displayName} size={56} />
           <View className="ml-4 flex-1">
-            <Text className="text-[17px] font-semibold" style={{ color: "#2B2621" }} numberOfLines={1}>
+            <Text className="text-[15.5px] font-semibold" style={{ color: "#2B2621" }} numberOfLines={1}>
               {displayName}
             </Text>
-            <Text className="mt-0.5 text-[13px]" style={{ color: "#8C8171" }} numberOfLines={1}>
+            <Text className="mt-0.5 text-[11.5px]" style={{ color: "#8C8171" }} numberOfLines={1}>
               {waiter?.restaurantName ? `${waiter.restaurantName} · ` : ""}
               {waiter?.email || "No email on file"}
             </Text>
           </View>
-          <Ionicons name="chevron-forward" size={18} color="#C7BFA9" />
+          <Icon name="chevron-forward" size={18} color="#C7BFA9" />
         </Pressable>
 
         <DutyStatusCard />
@@ -142,7 +142,7 @@ export default function Profile() {
         </SettingsSection>
 
         <Pressable testID="sign-out" accessibilityRole="button" onPress={() => setConfirming(true)} className="mt-2 items-center rounded-2xl py-3.5" style={{ backgroundColor: "#2B2621" }}>
-          <Text className="text-[15px] font-semibold" style={{ color: "#FF8A80" }}>
+          <Text className="text-[13.5px] font-semibold" style={{ color: "#FF8A80" }}>
             Sign out
           </Text>
         </Pressable>
@@ -156,10 +156,10 @@ export default function Profile() {
       <Modal visible={confirming} transparent animationType="fade" statusBarTranslucent onRequestClose={() => setConfirming(false)}>
         <View className="flex-1 justify-center px-7" style={{ backgroundColor: "rgba(43,38,33,0.55)" }}>
           <View className="rounded-3xl p-6" style={{ backgroundColor: "#FBF6EA" }}>
-            <Text className="text-[18px] font-bold" style={{ color: "#2B2621" }}>
+            <Text className="text-[16px] font-bold" style={{ color: "#2B2621" }}>
               Sign out?
             </Text>
-            <Text className="mt-2 text-[14px]" style={{ color: "#8C8171", lineHeight: 20 }}>
+            <Text className="mt-2 text-[12.5px]" style={{ color: "#8C8171", lineHeight: 20 }}>
               You will need your email and password to see your tables again. New-order alerts to this phone stop.
             </Text>
             <View className="mt-6 flex-row" style={{ gap: 10 }}>
@@ -170,7 +170,7 @@ export default function Profile() {
                 className="h-12 flex-1 items-center justify-center rounded-xl"
                 style={{ borderWidth: 1, borderColor: "#E7DAB8" }}
               >
-                <Text className="text-[15px] font-semibold" style={{ color: "#2B2621" }}>
+                <Text className="text-[13.5px] font-semibold" style={{ color: "#2B2621" }}>
                   Stay
                 </Text>
               </Pressable>
@@ -182,7 +182,7 @@ export default function Profile() {
                 className="h-12 flex-1 items-center justify-center rounded-xl"
                 style={{ backgroundColor: "#B0413E", opacity: leaving ? 0.6 : 1 }}
               >
-                <Text className="text-[15px] font-semibold text-white">{leaving ? "Signing out…" : "Sign out"}</Text>
+                <Text className="text-[13.5px] font-semibold text-white">{leaving ? "Signing out…" : "Sign out"}</Text>
               </Pressable>
             </View>
           </View>

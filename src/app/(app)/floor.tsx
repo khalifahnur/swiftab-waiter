@@ -1,4 +1,4 @@
-import { Ionicons } from "@react-native-vector-icons/ionicons";
+import { Icon, type IconName } from "@/components/ui/Icon";
 import { useState } from "react";
 import { Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -19,7 +19,7 @@ function Count({ status, value }: { status: TableLiveStatus; value: number }) {
         <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: status === "free" ? look.stroke : look.stroke }} />
         <Text style={{ fontSize: 12, fontWeight: "700", color: C.inkMuted, textTransform: "uppercase", letterSpacing: 0.6 }}>{look.label}</Text>
       </View>
-      <Text style={{ fontSize: 26, fontWeight: "800", color: C.ink, marginTop: 4, fontVariant: ["tabular-nums"] }}>{value}</Text>
+      <Text style={{ fontSize: 23.5, fontWeight: "800", color: C.ink, marginTop: 4, fontVariant: ["tabular-nums"] }}>{value}</Text>
     </View>
   );
 }
@@ -41,7 +41,7 @@ function TableCard({ table, floorName }: { table: LiveTable; floorName: string }
       <View style={{ flexDirection: "row", alignItems: "center" }}>
         <View style={{ flex: 1 }}>
           <Text style={{ fontSize: 11, fontWeight: "700", color: C.inkMuted, letterSpacing: 1.2 }}>TABLE</Text>
-          <Text style={{ fontSize: 30, fontWeight: "800", color: C.ink, letterSpacing: -0.5 }}>{table.name}</Text>
+          <Text style={{ fontSize: 27, fontWeight: "800", color: C.ink, letterSpacing: -0.5 }}>{table.name}</Text>
         </View>
         <View style={{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, borderWidth: 1.5, borderStyle: "dashed", borderColor: look.stroke, backgroundColor: status === "occupied" ? C.accentPale : look.fill }}>
           <Text style={{ fontSize: 11, fontWeight: "700", letterSpacing: 0.8, textTransform: "uppercase", color: status === "occupied" ? C.accentDeep : look.text }}>{look.label}</Text>
@@ -53,12 +53,12 @@ function TableCard({ table, floorName }: { table: LiveTable; floorName: string }
           { icon: "people-outline" as const, text: guests > 0 ? `${guests} of ${table.seats} seats` : `${table.seats} seats` },
         ].map((chip) => (
           <View key={chip.text} style={{ flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: C.paper, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 10 }}>
-            <Ionicons name={chip.icon} size={13} color={C.inkMuted} />
-            <Text style={{ fontSize: 13, fontWeight: "600", color: C.inkMuted }}>{chip.text}</Text>
+            <Icon name={chip.icon} size={13} color={C.inkMuted} />
+            <Text style={{ fontSize: 11.5, fontWeight: "600", color: C.inkMuted }}>{chip.text}</Text>
           </View>
         ))}
       </View>
-      <Text style={{ fontSize: 14, color: C.ink, marginTop: 12, lineHeight: 20 }}>{line}</Text>
+      <Text style={{ fontSize: 12.5, color: C.ink, marginTop: 12, lineHeight: 20 }}>{line}</Text>
     </View>
   );
 }
@@ -84,7 +84,7 @@ export default function FloorScreen() {
     <View style={{ flex: 1, backgroundColor: C.paper }}>
       <View style={{ backgroundColor: C.accent, paddingTop: insets.top + 12, paddingHorizontal: 20, paddingBottom: 16, borderBottomLeftRadius: 28, borderBottomRightRadius: 28 }}>
         <Text style={{ color: "rgba(255,255,255,0.8)", fontSize: 12, fontWeight: "700", letterSpacing: 1.4, textTransform: "uppercase" }}>Live</Text>
-        <Text style={{ color: C.white, fontSize: 24, fontWeight: "900", letterSpacing: -0.4 }}>Floor</Text>
+        <Text style={{ color: C.white, fontSize: 21.5, fontWeight: "900", letterSpacing: -0.4 }}>Floor</Text>
       </View>
 
       <ScrollView
@@ -99,18 +99,18 @@ export default function FloorScreen() {
           </View>
         ) : isError && !data ? (
           <View style={{ alignItems: "center", paddingTop: 60, paddingHorizontal: 24 }}>
-            <Ionicons name="cloud-offline" size={40} color={C.inkMuted} />
-            <Text style={{ fontSize: 18, fontWeight: "700", color: C.ink, marginTop: 12 }}>Could not load the floor</Text>
-            <Text style={{ fontSize: 14, color: C.inkMuted, textAlign: "center", marginTop: 6 }}>{errorMessage(error)}</Text>
+            <Icon name="cloud-offline" size={40} color={C.inkMuted} />
+            <Text style={{ fontSize: 16, fontWeight: "700", color: C.ink, marginTop: 12 }}>Could not load the floor</Text>
+            <Text style={{ fontSize: 12.5, color: C.inkMuted, textAlign: "center", marginTop: 6 }}>{errorMessage(error)}</Text>
             <Pressable accessibilityRole="button" onPress={() => refetch()} style={{ marginTop: 20, backgroundColor: C.accent, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12 }}>
-              <Text style={{ color: C.white, fontSize: 15, fontWeight: "700" }}>Try again</Text>
+              <Text style={{ color: C.white, fontSize: 13.5, fontWeight: "700" }}>Try again</Text>
             </Pressable>
           </View>
         ) : !active ? (
           <View style={{ alignItems: "center", paddingTop: 60, paddingHorizontal: 24 }}>
-            <Ionicons name="grid-outline" size={40} color={C.inkMuted} />
-            <Text style={{ fontSize: 18, fontWeight: "700", color: C.ink, marginTop: 12 }}>No floor plan yet</Text>
-            <Text style={{ fontSize: 14, color: C.inkMuted, textAlign: "center", marginTop: 6, lineHeight: 20 }}>
+            <Icon name="grid-outline" size={40} color={C.inkMuted} />
+            <Text style={{ fontSize: 16, fontWeight: "700", color: C.ink, marginTop: 12 }}>No floor plan yet</Text>
+            <Text style={{ fontSize: 12.5, color: C.inkMuted, textAlign: "center", marginTop: 6, lineHeight: 20 }}>
               Your manager can draw the tables in the Swiftab dashboard. They will appear here straight away.
             </Text>
           </View>
@@ -139,7 +139,7 @@ export default function FloorScreen() {
                       }}
                       style={{ height: 38, paddingHorizontal: 14, borderRadius: 19, justifyContent: "center", backgroundColor: on ? C.accent : C.card, borderWidth: 1, borderColor: on ? C.accent : C.cardBorder }}
                     >
-                      <Text style={{ fontSize: 13, fontWeight: "700", color: on ? C.white : C.ink }}>
+                      <Text style={{ fontSize: 11.5, fontWeight: "700", color: on ? C.white : C.ink }}>
                         {floor.name}
                         {busy ? ` · ${busy} busy` : ""}
                       </Text>
@@ -154,7 +154,7 @@ export default function FloorScreen() {
             {selected ? (
               <TableCard table={selected} floorName={active.name} />
             ) : (
-              <Text style={{ fontSize: 13, color: C.inkMuted, textAlign: "center", marginTop: 16 }}>Tap a table to see who is there.</Text>
+              <Text style={{ fontSize: 11.5, color: C.inkMuted, textAlign: "center", marginTop: 16 }}>Tap a table to see who is there.</Text>
             )}
           </>
         )}

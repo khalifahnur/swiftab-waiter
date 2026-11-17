@@ -1,9 +1,10 @@
-import Ionicons from "@react-native-vector-icons/ionicons";
+import { Icon, type IconName } from "@/components/ui/Icon";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Animated, Dimensions, Easing, FlatList, Modal, Platform, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
 
 import { errorMessage } from "@/api/client";
+import { Tap } from "@/components/ui/Tap";
 import OrderDetailView from "@/components/OrderDetails";
 import { getStatusMeta, TABS } from "@/constants/orderStatus";
 import { C } from "@/constants/theme";
@@ -73,7 +74,7 @@ export default function OrderList({ tab }: { tab: OrderTab }) {
   if (isError && !orders) {
     return (
       <View style={styles.centerContainer}>
-        <Ionicons name="cloud-offline" size={40} color={C.inkMuted} style={{ marginBottom: 12 }} />
+        <Icon name="cloud-offline" size={40} color={C.inkMuted} style={{ marginBottom: 12 }} />
         <Text style={styles.errorTitle}>Could not load orders</Text>
         <Text style={styles.errorBody}>{errorMessage(error, "Check your connection and try again.")}</Text>
         <Pressable
@@ -82,7 +83,7 @@ export default function OrderList({ tab }: { tab: OrderTab }) {
             feedback.press();
             refetch();
           }}
-          style={({ pressed }) => [styles.retryButton, { opacity: pressed ? 0.85 : 1 }]}
+          style={styles.retryButton}
         >
           <Text style={styles.retryText}>Try again</Text>
         </Pressable>
@@ -129,7 +130,7 @@ export default function OrderList({ tab }: { tab: OrderTab }) {
             const paidWith = paymentLabel(item.paymentMethod);
 
             return (
-              <Pressable
+              <Tap
                 testID={`order-${item._id}`}
                 accessibilityRole="button"
                 accessibilityLabel={`Table ${tableLabel(item.tableNumber)}, ${status.label}, ${formatKes(item.totalAmount)}`}
@@ -137,7 +138,8 @@ export default function OrderList({ tab }: { tab: OrderTab }) {
                   feedback.tap();
                   setSelectedId(item._id);
                 }}
-                style={({ pressed }) => [styles.card, { borderLeftColor: status.ink, transform: [{ scale: pressed ? 0.98 : 1 }] }]}
+                pressedStyle={{ opacity: 0.85 }}
+                style={[styles.card, { borderLeftColor: status.ink }]}
               >
                 <View style={styles.cardHeader}>
                   <View style={{ flex: 1, paddingRight: 10 }}>
@@ -148,14 +150,14 @@ export default function OrderList({ tab }: { tab: OrderTab }) {
                     </Text>
                   </View>
                   <View style={[styles.statusBadge, { backgroundColor: status.pale }]}>
-                    <Ionicons name={status.icon} size={11} color={status.ink} />
+                    <Icon name={status.icon} size={11} color={status.ink} />
                     <Text style={[styles.statusText, { color: status.ink }]}>{status.label}</Text>
                   </View>
                 </View>
 
                 {!!paidWith && (
                   <View style={payStyles.row}>
-                    <Ionicons name="wallet-outline" size={13} color={C.inkMuted} />
+                    <Icon name="wallet-outline" size={13} color={C.inkMuted} />
                     <Text style={payStyles.text}>
                       {item.status === "completed" ? "Paid with" : "Paying with"} {paidWith}
                     </Text>
@@ -169,16 +171,16 @@ export default function OrderList({ tab }: { tab: OrderTab }) {
                   </Text>
                   <View style={styles.footerRight}>
                     <Text style={styles.priceText}>{formatKes(item.totalAmount)}</Text>
-                    <Ionicons name="chevron-forward" size={16} color={C.inkMuted} />
+                    <Icon name="chevron-forward" size={16} color={C.inkMuted} />
                   </View>
                 </View>
-              </Pressable>
+              </Tap>
             );
           }}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <View style={styles.emptyIconWrapper}>
-                <Ionicons name={meta.empty.icon} size={32} color={C.inkMuted} />
+                <Icon name={meta.empty.icon} size={32} color={C.inkMuted} />
               </View>
               <Text style={styles.emptyTitle}>{meta.empty.title}</Text>
               <Text style={styles.emptyBody}>{meta.empty.body}</Text>
@@ -202,7 +204,7 @@ export default function OrderList({ tab }: { tab: OrderTab }) {
 
 const payStyles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 10 },
-  text: { fontSize: 13, fontWeight: "600", color: C.inkMuted },
+  text: { fontSize: 11.5, fontWeight: "600", color: C.inkMuted },
 });
 
 const styles = StyleSheet.create({
@@ -226,7 +228,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 16,
   },
-  summaryCount: { fontSize: 17, fontWeight: "700", color: C.ink },
+  summaryCount: { fontSize: 15.5, fontWeight: "700", color: C.ink },
   summaryLabel: {
     fontSize: 12,
     fontWeight: "700",
@@ -236,7 +238,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
   },
   summaryTotal: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "800",
     color: C.ink,
     fontVariant: ["tabular-nums"],
@@ -264,12 +266,12 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   tableText: {
-    fontSize: 19,
+    fontSize: 17,
     fontWeight: "700",
     color: C.ink,
     marginBottom: 3,
   },
-  metaText: { fontSize: 14, color: C.inkMuted, fontWeight: "500" },
+  metaText: { fontSize: 12.5, color: C.inkMuted, fontWeight: "500" },
   statusBadge: {
     flexDirection: "row",
     alignItems: "center",
@@ -294,10 +296,10 @@ const styles = StyleSheet.create({
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: C.cardBorder,
   },
-  footerText: { fontSize: 13, color: C.inkMuted, fontWeight: "500" },
+  footerText: { fontSize: 11.5, color: C.inkMuted, fontWeight: "500" },
   footerRight: { flexDirection: "row", alignItems: "center", gap: 4 },
   priceText: {
-    fontSize: 16,
+    fontSize: 14.5,
     fontWeight: "700",
     color: C.ink,
     fontVariant: ["tabular-nums"],
@@ -323,13 +325,13 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   emptyTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "700",
     color: C.ink,
     marginBottom: 6,
   },
   emptyBody: {
-    fontSize: 14,
+    fontSize: 12.5,
     color: C.inkMuted,
     textAlign: "center",
     maxWidth: 260,
@@ -337,13 +339,13 @@ const styles = StyleSheet.create({
   },
 
   errorTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "700",
     color: C.ink,
     marginBottom: 8,
   },
   errorBody: {
-    fontSize: 14,
+    fontSize: 12.5,
     color: C.inkMuted,
     textAlign: "center",
     marginBottom: 24,
@@ -355,5 +357,5 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 12,
   },
-  retryText: { color: "#FFFFFF", fontSize: 15, fontWeight: "700" },
+  retryText: { color: "#FFFFFF", fontSize: 13.5, fontWeight: "700" },
 });

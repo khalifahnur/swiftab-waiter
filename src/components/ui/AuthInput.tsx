@@ -1,4 +1,4 @@
-import { Ionicons, type IoniconsIconName } from "@react-native-vector-icons/ionicons";
+import { Icon, type IconName } from "@/components/ui/Icon";
 import { useState } from "react";
 import { Pressable, Text, TextInput, TextInputProps, View } from "react-native";
 
@@ -6,7 +6,7 @@ interface AuthInputProps extends TextInputProps {
   label: string;
   error?: string;
   secure?: boolean;
-  leftIcon?: IoniconsIconName;
+  leftIcon?: IconName;
 }
 
 const INK = "#1C1C1E";
@@ -28,15 +28,15 @@ export function AuthInput({
 
   return (
     <View className="mb-4">
-      <Text className="mb-1.5 text-[13px] font-medium text-gray-500">
+      <Text className="mb-1.5 text-[11.5px] font-medium text-gray-500">
         {label}
       </Text>
       <View
         className="flex-row items-center rounded-xl bg-gray-50 px-3.5"
-        style={{ borderWidth: 1.5, borderColor, height: 52 }}
+        style={{ borderWidth: 1.5, borderColor, height: 46 }}
       >
         {leftIcon && (
-          <Ionicons
+          <Icon
             name={leftIcon}
             size={18}
             color={MUTED}
@@ -55,12 +55,12 @@ export function AuthInput({
             rest.onBlur?.(e);
           }}
           placeholderTextColor={MUTED}
-          className="flex-1 text-[15px] text-gray-900"
+          className="flex-1 text-[13.5px] text-gray-900"
           style={{ paddingVertical: 0 }}
         />
         {secure && (
           <Pressable onPress={() => setHidden((h) => !h)} hitSlop={10}>
-            <Ionicons
+            <Icon
               name={hidden ? "eye-off-outline" : "eye-outline"}
               size={19}
               color={MUTED}

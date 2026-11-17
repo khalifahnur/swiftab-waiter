@@ -1,4 +1,4 @@
-import { Ionicons, type IoniconsIconName } from "@react-native-vector-icons/ionicons";
+import { Icon, type IconName } from "@/components/ui/Icon";
 import { StyleSheet, Text, View } from "react-native";
 import { BaseToastProps } from "react-native-toast-message";
 
@@ -6,7 +6,7 @@ type Tone = "success" | "error";
 
 const TONES: Record<
   Tone,
-  { icon: IoniconsIconName; fg: string; bg: string }
+  { icon: IconName; fg: string; bg: string }
 > = {
   success: { icon: "checkmark-circle", fg: "#0F9D58", bg: "#E7F8EF" },
   error: { icon: "close-circle", fg: "#E0393E", bg: "#FDEAEA" },
@@ -24,19 +24,19 @@ function ToastCard({ text1, text2, tone }: BaseToastProps & { tone: Tone }) {
         className="mr-3 h-9 w-9 items-center justify-center rounded-full"
         style={{ backgroundColor: bg }}
       >
-        <Ionicons name={icon} size={20} color={fg} />
+        <Icon name={icon} size={20} color={fg} />
       </View>
       <View className="flex-1">
         {!!text1 && (
           <Text
             numberOfLines={1}
-            className="text-[15px] font-semibold text-gray-900"
+            className="text-[13.5px] font-semibold text-gray-900"
           >
             {text1}
           </Text>
         )}
         {!!text2 && (
-          <Text numberOfLines={2} className="mt-0.5 text-[13px] text-gray-500">
+          <Text numberOfLines={2} className="mt-0.5 text-[11.5px] text-gray-500">
             {text2}
           </Text>
         )}

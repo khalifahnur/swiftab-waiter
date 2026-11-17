@@ -1,4 +1,4 @@
-import { Ionicons } from "@react-native-vector-icons/ionicons";
+import { Icon, type IconName } from "@/components/ui/Icon";
 import { BlurView } from "expo-blur";
 import { useState } from "react";
 import { Linking, Platform, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View } from "react-native";
@@ -154,7 +154,7 @@ export default function OrderDetailView({ order, onClose }: { order: Order; onCl
                   }}
                   style={[pay.method, active && pay.methodActive]}
                 >
-                  <Ionicons name={option.icon} size={15} color={active ? C.white : C.ink} />
+                  <Icon name={option.icon} size={15} color={active ? C.white : C.ink} />
                   <Text style={[pay.methodText, active && { color: C.white }]}>{option.label}</Text>
                 </Pressable>
               );
@@ -227,7 +227,7 @@ export default function OrderDetailView({ order, onClose }: { order: Order; onCl
       return (
         <View style={styles.footer}>
           <View style={[styles.footerNote, { marginBottom: 10 }]}>
-            <Ionicons name="restaurant-outline" size={16} color={C.inkMuted} />
+            <Icon name="restaurant-outline" size={16} color={C.inkMuted} />
             <Text style={styles.footerNoteText}>Served — waiting for the guest to ask for the bill</Text>
           </View>
           <AuthButton testID="pay-now" label="Guest is paying now" variant="dark" onPress={() => setPaying(true)} disabled={busy} />
@@ -255,9 +255,9 @@ export default function OrderDetailView({ order, onClose }: { order: Order; onCl
           hitSlop={10}
           accessibilityRole="button"
           accessibilityLabel="Close order details"
-          style={({ pressed }) => [styles.closeCircle, { opacity: pressed ? 0.5 : 1 }]}
+          style={styles.closeCircle}
         >
-          <Ionicons name="close" size={18} color={C.ink} />
+          <Icon name="close" size={18} color={C.ink} />
         </Pressable>
       </View>
 
@@ -277,14 +277,14 @@ export default function OrderDetailView({ order, onClose }: { order: Order; onCl
           <View style={styles.metaRow}>
             {guests > 0 && (
               <View style={styles.metaChip}>
-                <Ionicons name="people-outline" size={13} color={C.inkMuted} />
+                <Icon name="people-outline" size={13} color={C.inkMuted} />
                 <Text style={styles.metaChipText}>
                   {guests} {guests === 1 ? "guest" : "guests"}
                 </Text>
               </View>
             )}
             <View style={styles.metaChip}>
-              <Ionicons name="time-outline" size={13} color={C.inkMuted} />
+              <Icon name="time-outline" size={13} color={C.inkMuted} />
               <Text style={styles.metaChipText}>
                 {timeAgo(order.time)}
                 {clock(order.time) ? ` · ${clock(order.time)}` : ""}
@@ -304,9 +304,9 @@ export default function OrderDetailView({ order, onClose }: { order: Order; onCl
                 hitSlop={10}
                 accessibilityRole="button"
                 accessibilityLabel={`Call ${customer}`}
-                style={({ pressed }) => [styles.callButton, { opacity: pressed ? 0.75 : 1 }]}
+                style={styles.callButton}
               >
-                <Ionicons name="call" size={16} color="#FFFFFF" />
+                <Icon name="call" size={16} color="#FFFFFF" />
               </Pressable>
             )}
           </View>
@@ -382,7 +382,7 @@ export default function OrderDetailView({ order, onClose }: { order: Order; onCl
 }
 
 const pay = StyleSheet.create({
-  title: { fontSize: 15, fontWeight: "700", color: C.ink, marginBottom: 10 },
+  title: { fontSize: 13.5, fontWeight: "700", color: C.ink, marginBottom: 10 },
   methods: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 10 },
   method: {
     flexDirection: "row",
@@ -396,7 +396,7 @@ const pay = StyleSheet.create({
     borderColor: C.cardBorder,
   },
   methodActive: { backgroundColor: C.accent, borderColor: C.accent },
-  methodText: { fontSize: 13.5, fontWeight: "700", color: C.ink },
+  methodText: { fontSize: 12, fontWeight: "700", color: C.ink },
   input: {
     height: 46,
     borderRadius: 12,
@@ -404,19 +404,19 @@ const pay = StyleSheet.create({
     borderWidth: 1,
     borderColor: C.cardBorder,
     paddingHorizontal: 12,
-    fontSize: 14,
+    fontSize: 12.5,
     color: C.ink,
     marginBottom: 10,
     fontFamily: MONO_FONT,
   },
   actions: { flexDirection: "row", alignItems: "center", gap: 10 },
-  back: { height: 52, paddingHorizontal: 18, borderRadius: 12, borderWidth: 1, borderColor: C.cardBorder, alignItems: "center", justifyContent: "center" },
-  backText: { fontSize: 15, fontWeight: "600", color: C.ink },
+  back: { height: 46, paddingHorizontal: 18, borderRadius: 12, borderWidth: 1, borderColor: C.cardBorder, alignItems: "center", justifyContent: "center" },
+  backText: { fontSize: 13.5, fontWeight: "600", color: C.ink },
   link: { alignItems: "center", paddingTop: 12, paddingBottom: 2 },
-  linkTextDanger: { fontSize: 14, fontWeight: "600", color: C.danger },
-  hint: { fontSize: 13, color: C.inkMuted, marginTop: -4, marginBottom: 12 },
-  destructive: { flex: 1, height: 52, borderRadius: 12, backgroundColor: C.danger, alignItems: "center", justifyContent: "center" },
-  destructiveText: { fontSize: 15, fontWeight: "700", color: C.white },
+  linkTextDanger: { fontSize: 12.5, fontWeight: "600", color: C.danger },
+  hint: { fontSize: 11.5, color: C.inkMuted, marginTop: -4, marginBottom: 12 },
+  destructive: { flex: 1, height: 46, borderRadius: 12, backgroundColor: C.danger, alignItems: "center", justifyContent: "center" },
+  destructiveText: { fontSize: 13.5, fontWeight: "700", color: C.white },
   note: { fontFamily: MONO_FONT, fontSize: 12.5, color: C.amber, marginLeft: 28, marginTop: 2 },
   servedBy: { fontSize: 12.5, color: C.inkMuted, marginTop: 6 },
 });
@@ -501,7 +501,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   tableNumber: {
-    fontSize: 42,
+    fontSize: 38,
     fontWeight: "800",
     color: C.ink,
     letterSpacing: -1,
@@ -534,11 +534,11 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 10,
   },
-  metaChipText: { fontSize: 13, fontWeight: "600", color: C.inkMuted },
+  metaChipText: { fontSize: 11.5, fontWeight: "600", color: C.inkMuted },
 
   customerRow: { flexDirection: "row", alignItems: "center", marginBottom: 4 },
-  customerName: { fontSize: 18, fontWeight: "700", color: C.ink },
-  customerPhone: { fontSize: 13, color: C.inkMuted, marginTop: 2 },
+  customerName: { fontSize: 16, fontWeight: "700", color: C.ink },
+  customerPhone: { fontSize: 11.5, color: C.inkMuted, marginTop: 2 },
   callButton: {
     width: 38,
     height: 38,
@@ -572,25 +572,25 @@ const styles = StyleSheet.create({
   itemRow: { flexDirection: "row", alignItems: "flex-start" },
   itemQty: {
     fontFamily: MONO_FONT,
-    fontSize: 14,
+    fontSize: 12.5,
     fontWeight: "700",
     color: C.inkMuted,
     width: 28,
   },
   itemName: {
     fontFamily: MONO_FONT,
-    fontSize: 14,
+    fontSize: 12.5,
     color: C.ink,
     flex: 1,
     paddingRight: 12,
   },
   itemPrice: {
     fontFamily: MONO_FONT,
-    fontSize: 14,
+    fontSize: 12.5,
     fontWeight: "600",
     color: C.ink,
   },
-  emptyText: { fontSize: 14, color: C.inkMuted, fontStyle: "italic" },
+  emptyText: { fontSize: 12.5, color: C.inkMuted, fontStyle: "italic" },
 
   totalsBlock: { marginTop: 4 },
   totalRow: {
@@ -598,8 +598,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
-  totalLabel: { fontSize: 15, fontWeight: "600", color: C.inkMuted },
-  totalAmount: { fontSize: 24, fontWeight: "800", color: C.ink },
+  totalLabel: { fontSize: 13.5, fontWeight: "600", color: C.inkMuted },
+  totalAmount: { fontSize: 21.5, fontWeight: "800", color: C.ink },
 
   paymentRow: {
     flexDirection: "row",
@@ -608,7 +608,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   paymentDot: { width: 6, height: 6, borderRadius: 3 },
-  paymentText: { fontSize: 13, fontWeight: "600" },
+  paymentText: { fontSize: 11.5, fontWeight: "600" },
 
   ticketId: {
     fontFamily: MONO_FONT,
@@ -633,5 +633,5 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
   },
-  footerNoteText: { fontSize: 14, fontWeight: "600", color: C.inkMuted },
+  footerNoteText: { fontSize: 12.5, fontWeight: "600", color: C.inkMuted },
 });

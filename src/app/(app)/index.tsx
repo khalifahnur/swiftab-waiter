@@ -1,4 +1,4 @@
-import { Ionicons } from "@react-native-vector-icons/ionicons";
+import { Icon, type IconName } from "@/components/ui/Icon";
 import { LinearGradient } from "expo-linear-gradient";
 import { createMaterialTopTabNavigator } from "expo-router/js-top-tabs";
 import { useEffect, useRef } from "react";
@@ -27,7 +27,7 @@ function greeting(): { text: string; icon: "sunny-outline" | "partly-sunny-outli
 function Stat({ value, label }: { value: string; label: string }) {
   return (
     <View className="flex-1">
-      <Text className="text-white text-[18px] font-extrabold" style={{ fontVariant: ["tabular-nums"] }} numberOfLines={1}>
+      <Text className="text-white text-[16px] font-extrabold" style={{ fontVariant: ["tabular-nums"] }} numberOfLines={1}>
         {value}
       </Text>
       <Text className="text-white/70 text-[11px] font-semibold uppercase tracking-wider mt-0.5">{label}</Text>
@@ -92,14 +92,14 @@ export default function HomeScreen() {
         <View className="flex-row items-center">
           <View className="flex-1" accessible accessibilityLabel={`${hello.text}, ${firstName}`}>
             <View className="flex-row items-center mb-0.5">
-              <Ionicons name={hello.icon} size={13} color="rgba(255,255,255,0.8)" style={{ marginRight: 6 }} />
+              <Icon name={hello.icon} size={13} color="rgba(255,255,255,0.8)" style={{ marginRight: 6 }} />
               <Text className="text-white/80 text-[12px] font-bold tracking-widest uppercase">{hello.text}</Text>
             </View>
-            <Text className="text-white text-[24px] font-black capitalize tracking-tight" numberOfLines={1}>
+            <Text className="text-white text-[21.5px] font-black capitalize tracking-tight" numberOfLines={1}>
               {firstName}
             </Text>
             {!!waiter?.restaurantName && (
-              <Text className="text-white/75 text-[13px] font-medium mt-0.5" numberOfLines={1}>
+              <Text className="text-white/75 text-[11.5px] font-medium mt-0.5" numberOfLines={1}>
                 {waiter.restaurantName}
               </Text>
             )}
@@ -117,7 +117,7 @@ export default function HomeScreen() {
             style={{ backgroundColor: onDuty ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.16)", opacity: duty.isPending ? 0.6 : 1 }}
           >
             <View className="w-2 h-2 rounded-full mr-2" style={{ backgroundColor: onDuty ? "#22A06B" : "rgba(255,255,255,0.7)" }} />
-            <Text className="text-[13px] font-bold" style={{ color: onDuty ? C.accentDeep : "#FFFFFF" }}>
+            <Text className="text-[11.5px] font-bold" style={{ color: onDuty ? C.accentDeep : "#FFFFFF" }}>
               {onDuty ? "On duty" : "Off duty"}
             </Text>
           </Pressable>
@@ -133,7 +133,7 @@ export default function HomeScreen() {
       <TopTab.Navigator
         screenOptions={{
           tabBarStyle: { backgroundColor: C.paper, elevation: 0, shadowOpacity: 0, borderBottomWidth: 1, borderBottomColor: C.cardBorder },
-          tabBarLabelStyle: { fontSize: 13, fontWeight: "bold", textTransform: "none" },
+          tabBarLabelStyle: { fontSize: 11.5, fontWeight: "bold", textTransform: "none" },
           tabBarActiveTintColor: C.accent,
           tabBarInactiveTintColor: C.inkMuted,
           tabBarIndicatorStyle: { backgroundColor: C.accent, height: 3, borderRadius: 3 },

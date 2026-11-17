@@ -70,10 +70,10 @@ export default function Onboarding() {
 
   const CardContent = ({ item }: { item: Slide }) => (
     <>
-      <Text className="text-[28px] font-extrabold leading-9 text-white">
+      <Text className="text-[25px] font-extrabold leading-9 text-white">
         {item.title}
       </Text>
-      <Text className="mt-3 text-[16px] leading-6 text-gray-200">
+      <Text className="mt-3 text-[14.5px] leading-6 text-gray-200">
         {item.subtitle}
       </Text>
     </>
@@ -139,11 +139,11 @@ export default function Onboarding() {
                 tint="dark"
                 className="overflow-hidden rounded-full px-5 py-2 border border-white/20"
               >
-                <Text className="text-[14px] font-bold text-white">Skip</Text>
+                <Text className="text-[12.5px] font-bold text-white">Skip</Text>
               </BlurView>
             ) : (
               <View className="overflow-hidden rounded-full border border-white/20 bg-black/70 px-5 py-2">
-                <Text className="text-[14px] font-bold text-white">Skip</Text>
+                <Text className="text-[12.5px] font-bold text-white">Skip</Text>
               </View>
             )}
           </Pressable>
@@ -187,7 +187,7 @@ export default function Onboarding() {
           className="h-[56px] items-center justify-center rounded-2xl active:opacity-90"
           style={{ backgroundColor: "#0d9488" }}
         >
-          <Text className="text-[17px] font-bold text-white">
+          <Text className="text-[15.5px] font-bold text-white">
             {isLast ? "Get Started" : "Next"}
           </Text>
         </Pressable>

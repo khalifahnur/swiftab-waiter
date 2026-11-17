@@ -53,8 +53,8 @@ export default function SignIn() {
     <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1 bg-[#F2E8D6]">
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
         <View className="flex-1 justify-center px-6">
-          <Text className="mb-2 text-[28px] font-bold text-gray-900">Welcome back</Text>
-          <Text className="mb-8 text-[15px] text-gray-500">Sign in to see your tables and orders.</Text>
+          <Text className="mb-2 text-[25px] font-bold text-gray-900">Welcome back</Text>
+          <Text className="mb-8 text-[13.5px] text-gray-500">Sign in to see your tables and orders.</Text>
 
           <AuthInput
             testID="signin-email"
@@ -83,13 +83,13 @@ export default function SignIn() {
           />
 
           <Pressable className="mb-4 self-end" hitSlop={10} accessibilityRole="button" onPress={() => setShowHelp((v) => !v)}>
-            <Text className="text-[13px] font-medium" style={{ color: "#008080" }}>
+            <Text className="text-[11.5px] font-medium" style={{ color: "#008080" }}>
               Forgot password?
             </Text>
           </Pressable>
           {showHelp && (
             <View className="mb-5 rounded-xl p-3.5" style={{ backgroundColor: "#FBF6EA", borderWidth: 1, borderColor: "#E7DAB8" }}>
-              <Text className="text-[13px]" style={{ color: "#2B2621", lineHeight: 19 }}>
+              <Text className="text-[11.5px]" style={{ color: "#2B2621", lineHeight: 19 }}>
                 Ask your manager to reset your access in the Swiftab dashboard (Settings → Staff). You will get a new invite code, and
                 can then choose a new password under “Set up your account”.
               </Text>
@@ -99,9 +99,9 @@ export default function SignIn() {
           <AuthButton testID="signin-submit" label="Sign in" onPress={onSubmit} loading={login.isPending} />
 
           <View className="mt-8 flex-row justify-center">
-            <Text className="text-[14px] text-gray-500">Have an invite code? </Text>
+            <Text className="text-[12.5px] text-gray-500">Have an invite code? </Text>
             <Pressable onPress={() => router.push("/(auth)/signup")} hitSlop={10} accessibilityRole="link">
-              <Text className="text-[14px] font-semibold" style={{ color: "#008080" }}>
+              <Text className="text-[12.5px] font-semibold" style={{ color: "#008080" }}>
                 Set up your account
               </Text>
             </Pressable>
