@@ -1,4 +1,4 @@
-import { Ionicons } from "@react-native-vector-icons/ionicons";
+import { Icon, type IconName } from "@/components/ui/Icon";
 import { useMutation } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
@@ -87,7 +87,7 @@ export default function SignUp() {
             accessibilityRole="button"
             accessibilityLabel="Go back"
           >
-            <Ionicons name="chevron-back" size={20} color="#1C1C1E" />
+            <Icon name="chevron-back" size={20} color="#1C1C1E" />
           </Pressable>
 
           <StepIndicator step={step} />
@@ -95,8 +95,8 @@ export default function SignUp() {
           <Animated.View style={{ opacity: fade }}>
             {step === 1 ? (
               <>
-                <Text className="mb-2 text-[28px] font-bold text-gray-900">Join your restaurant</Text>
-                <Text className="mb-8 text-[15px] text-gray-500">
+                <Text className="mb-2 text-[25px] font-bold text-gray-900">Join your restaurant</Text>
+                <Text className="mb-8 text-[13.5px] text-gray-500">
                   Enter your work email and the invite code your manager gave you.
                 </Text>
 
@@ -120,16 +120,16 @@ export default function SignUp() {
                   onChangeText={(text) => setCode(text.replace(/\D/g, "").slice(0, 6))}
                   error={errors.code}
                 />
-                <Text className="mb-6 text-[13px] text-gray-500">
+                <Text className="mb-6 text-[11.5px] text-gray-500">
                   No code, or it has expired? Your manager can issue a new one from the dashboard under Settings → Staff.
                 </Text>
 
                 <AuthButton testID="signup-continue" label="Continue" onPress={submitInvite} loading={verify.isPending} />
 
                 <View className="mt-8 flex-row justify-center">
-                  <Text className="text-[14px] text-gray-500">Already set up? </Text>
+                  <Text className="text-[12.5px] text-gray-500">Already set up? </Text>
                   <Pressable onPress={() => router.replace("/(auth)/signin")} hitSlop={10} accessibilityRole="link">
-                    <Text className="text-[14px] font-semibold" style={{ color: "#008080" }}>
+                    <Text className="text-[12.5px] font-semibold" style={{ color: "#008080" }}>
                       Sign in
                     </Text>
                   </Pressable>
@@ -137,8 +137,8 @@ export default function SignUp() {
               </>
             ) : (
               <>
-                <Text className="mb-2 text-[28px] font-bold text-gray-900">Set a password</Text>
-                <Text className="mb-8 text-[15px] text-gray-500">You will use it with {email.trim()} to sign in.</Text>
+                <Text className="mb-2 text-[25px] font-bold text-gray-900">Set a password</Text>
+                <Text className="mb-8 text-[13.5px] text-gray-500">You will use it with {email.trim()} to sign in.</Text>
 
                 <AuthInput
                   testID="signup-password"

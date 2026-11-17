@@ -1,9 +1,9 @@
-import { Ionicons, type IoniconsIconName } from "@react-native-vector-icons/ionicons";
+import { Icon, type IconName } from "@/components/ui/Icon";
 import { feedback } from "@/lib/feedback";
 import { Pressable, Switch, Text, View } from "react-native";
 
 interface SettingsRowProps {
-  icon: IoniconsIconName;
+  icon: IconName;
   iconColor?: string;
   iconBg?: string;
   label: string;
@@ -41,14 +41,14 @@ export function SettingsRow({
         className="mr-3 h-8 w-8 items-center justify-center rounded-lg"
         style={{ backgroundColor: destructive ? "#FDEAEA" : iconBg }}
       >
-        <Ionicons
+        <Icon
           name={icon}
           size={17}
           color={destructive ? "#E0393E" : iconColor}
         />
       </View>
       <Text
-        className="flex-1 text-[15px]"
+        className="flex-1 text-[13.5px]"
         style={{ color: destructive ? "#E0393E" : "#1C1C1E" }}
       >
         {label}
@@ -65,10 +65,10 @@ export function SettingsRow({
       ) : (
         <>
           {!!value && (
-            <Text className="mr-1.5 text-[14px] text-gray-400">{value}</Text>
+            <Text className="mr-1.5 text-[12.5px] text-gray-400">{value}</Text>
           )}
           {!!onPress && (
-            <Ionicons name="chevron-forward" size={16} color="#C7C7CC" />
+            <Icon name="chevron-forward" size={16} color="#C7C7CC" />
           )}
         </>
       )}

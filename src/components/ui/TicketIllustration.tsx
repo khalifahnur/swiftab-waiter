@@ -1,11 +1,11 @@
-import { Ionicons, type IoniconsIconName } from "@react-native-vector-icons/ionicons";
+import { Icon, type IconName } from "@/components/ui/Icon";
 import { Text, View } from "react-native";
 
 const NOTCH_COUNT = 9;
 const CARD_WIDTH = 220;
 
 interface TicketIllustrationProps {
-  icon: IoniconsIconName;
+  icon: IconName;
   accent: string;
   stamp: string;
 }
@@ -25,7 +25,7 @@ export function TicketIllustration({
           className="h-20 w-20 items-center justify-center rounded-2xl"
           style={{ backgroundColor: accent }}
         >
-          <Ionicons name={icon} size={34} color="#fff" />
+          <Icon name={icon} size={34} color="#fff" />
         </View>
 
         <View

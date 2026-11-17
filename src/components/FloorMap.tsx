@@ -1,4 +1,4 @@
-import { Ionicons } from "@react-native-vector-icons/ionicons";
+import { Icon, type IconName } from "@/components/ui/Icon";
 import { useMemo, useState } from "react";
 import { LayoutChangeEvent, Pressable, ScrollView, Text, View } from "react-native";
 
@@ -151,7 +151,7 @@ export default function FloorMap({
               onPress={() => setZoom((z) => Math.min(ZOOMS.length - 1, Math.max(0, z + button.step)))}
               style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: C.card, borderWidth: 1, borderColor: C.cardBorder, alignItems: "center", justifyContent: "center" }}
             >
-              <Ionicons name={button.icon} size={16} color={C.ink} />
+              <Icon name={button.icon} size={16} color={C.ink} />
             </Pressable>
           ))}
         </View>

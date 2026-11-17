@@ -1,4 +1,4 @@
-import type { IoniconsIconName } from "@react-native-vector-icons/ionicons";
+import type { IconName } from "@/components/ui/Icon";
 
 import type { OrderTab } from "@/types";
 
@@ -7,7 +7,7 @@ import { C } from "./theme";
 export interface StatusMeta {
   /** What an order in this state is called on its badge. */
   label: string;
-  icon: IoniconsIconName;
+  icon: IconName;
   /** Text and icon colour on top of `pale`. */
   ink: string;
   /** Background of the badge. */
@@ -28,7 +28,7 @@ const FALLBACK: StatusMeta = { label: "Order", icon: "ellipse-outline", ink: C.i
 export const getStatusMeta = (status: string | undefined): StatusMeta => BY_STATUS[status ?? ""] ?? FALLBACK;
 
 /** The queues, in the order a table moves through them. */
-export const TABS: { id: OrderTab; label: string; empty: { icon: IoniconsIconName; title: string; body: string } }[] = [
+export const TABS: { id: OrderTab; label: string; empty: { icon: IconName; title: string; body: string } }[] = [
   { id: "not-taken", label: "New", empty: { icon: "time-outline", title: "All caught up", body: "New orders will show up here." } },
   { id: "served", label: "Served", empty: { icon: "restaurant-outline", title: "Nothing at the tables", body: "Orders you have served wait here until the bill is asked for." } },
   { id: "payment", label: "Payment", empty: { icon: "wallet-outline", title: "No bills waiting", body: "Tables that are ready to pay appear here." } },

@@ -46,7 +46,7 @@ export function AuthButton({
       accessibilityState={{ disabled: Boolean(isDisabled), busy: Boolean(loading) }}
       onPress={handlePress}
       disabled={isDisabled}
-      className="h-[52px] items-center justify-center rounded-xl"
+      className="h-[46px] items-center justify-center rounded-xl"
       style={{
         backgroundColor: bg,
         opacity: isDisabled ? (isGhost ? 0.5 : 0.6) : 1,
@@ -56,7 +56,7 @@ export function AuthButton({
         <ActivityIndicator color={isGhost ? "#0A84FF" : "#fff"} />
       ) : (
         <Text
-          className="text-[16px] font-semibold"
+          className="text-[14.5px] font-semibold"
           style={{ color: isGhost ? "#0A84FF" : "#fff" }}
         >
           {label}

@@ -38,7 +38,7 @@ export function DutyStatusCard() {
       <View className="flex-1 flex-row items-center">
         <View className="mr-3 h-2.5 w-2.5 rounded-full" style={{ backgroundColor: onDuty ? "#30D158" : "#9A9AA0" }} />
         <View className="flex-1">
-          <Text className="text-[15px] font-semibold" style={{ color: onDuty ? "#fff" : "#2B2621" }}>
+          <Text className="text-[13.5px] font-semibold" style={{ color: onDuty ? "#fff" : "#2B2621" }}>
             {onDuty ? "On duty" : "Off duty"}
           </Text>
           <Text className="mt-0.5 text-[12px]" style={{ color: onDuty ? "#9FD6C9" : "#8C8171" }}>
@@ -56,7 +56,7 @@ export function DutyStatusCard() {
         className="rounded-full px-4 py-2"
         style={{ backgroundColor: onDuty ? "#30D158" : "#008080", opacity: duty.isPending ? 0.6 : 1 }}
       >
-        <Text className="text-[13px] font-semibold text-white">{onDuty ? "Clock out" : "Clock in"}</Text>
+        <Text className="text-[11.5px] font-semibold text-white">{onDuty ? "Clock out" : "Clock in"}</Text>
       </Pressable>
     </View>
   );
