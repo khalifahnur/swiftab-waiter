@@ -24,6 +24,8 @@ export interface OrderItem {
   cost: number;
   quantity: number;
   note?: string;
+  /** The friend who ordered it on the host's shared tab: serve it to them. */
+  addedBy?: string;
 }
 
 export interface OrderCustomer {
