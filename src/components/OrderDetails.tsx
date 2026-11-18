@@ -327,6 +327,7 @@ export default function OrderDetailView({ order, onClose }: { order: Order; onCl
                     </Text>
                     <Text style={styles.itemPrice}>{formatKes(item.cost * item.quantity)}</Text>
                   </View>
+                  {!!item.addedBy && <Text style={pay.forGuest}>For {item.addedBy}</Text>}
                   {!!item.note && <Text style={pay.note}>↳ {item.note}</Text>}
                 </View>
               ))
@@ -418,6 +419,19 @@ const pay = StyleSheet.create({
   destructive: { flex: 1, height: 46, borderRadius: 12, backgroundColor: C.danger, alignItems: "center", justifyContent: "center" },
   destructiveText: { fontSize: 13.5, fontWeight: "700", color: C.white },
   note: { fontFamily: MONO_FONT, fontSize: 12.5, color: C.amber, marginLeft: 28, marginTop: 2 },
+  forGuest: {
+    alignSelf: "flex-start",
+    fontSize: 11.5,
+    fontWeight: "700",
+    color: C.accentDeep,
+    backgroundColor: C.accentPale,
+    borderRadius: 999,
+    overflow: "hidden",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginLeft: 28,
+    marginTop: 3,
+  },
   servedBy: { fontSize: 12.5, color: C.inkMuted, marginTop: 6 },
 });
 
